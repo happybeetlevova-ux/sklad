@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d7566">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon2-192.png"><link rel="apple-touch-icon" href="icon2-192.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Мастерская 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -196,6 +196,16 @@ textarea.inp{min-height:100px;font:12px/1.4 var(--f-num)}
 .chg{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid var(--line)}
 .chg:last-child{border-bottom:0}
 .chg b{font-weight:600}
+.cloud{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.cloud i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.cloud.ok i{background:var(--ok)}.cloud.wait i{background:var(--warn)}.cloud.err i{background:var(--bad)}
+.keybox{font:600 15px var(--f-num);letter-spacing:.04em;background:var(--sunk);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+.months{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.months .chip{white-space:nowrap}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:500 11px var(--f-body);fill:var(--muted)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabs-h) + 86px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 </style>
 </head><body>
@@ -207,7 +217,7 @@ textarea.inp{min-height:100px;font:12px/1.4 var(--f-num)}
   <button type="button" data-v="products"><svg viewBox="0 0 24 24"><path d="M12 3 3 7.5v9L12 21l9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>Изделия</button>
   <button type="button" data-v="materials"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M21 12h-3"/></svg>Материалы</button>
   <button type="button" data-v="log"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Журнал</button>
-  <button type="button" data-v="plan"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>План</button>
+  <button type="button" data-v="plan"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Продажи</button>
   <button type="button" data-v="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Ещё</button>
 </div></nav>
 <div class="back" id="back" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
@@ -274,7 +284,13 @@ function load(){
   try{ce=JSON.parse(localStorage.getItem("cena3d_v1")||"null")}catch(e){}
   return normalize(migrate(sk,ce));
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));storageOk=true}catch(e){storageOk=false;toast("Не удалось сохранить в памяти телефона")}}
+const SKEY="master3d_sync";
+function loadSync(){let d=null;try{d=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){}return Object.assign({on:false,key:"",device:"d"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),base:0,localRev:0,pushedRev:0,lastPush:0,err:""},d||{})}
+let SY=loadSync(),lastJson="",syncTimer=null,syncConflict=null,pushing=false,pushAgain=false;
+function saveSync(){try{localStorage.setItem(SKEY,JSON.stringify(SY))}catch(e){}}
+function save(){const js=JSON.stringify(S);try{localStorage.setItem(KEY,js);storageOk=true}catch(e){storageOk=false;toast("Не удалось сохранить в памяти телефона")}
+  if(lastJson&&js!==lastJson&&SY.on){SY.localRev=Date.now();saveSync();clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncPush(),6000);try{cloudDot()}catch(e){}}
+  lastJson=js}
 let S=load();save();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 let view="products",matTab="plastics",prodSort="attention",onlyLow=false,draft=null,editId=null,dirty=false;
@@ -355,8 +371,9 @@ function topBar(){
   }
   const lc=lowCount(),showSearch=view==="products"||view==="materials";
   const q=$("#q")?$("#q").value:"";
-  $("#topbar").innerHTML=`<div class="brand"><h1>Мастерская<span>.</span>3D</h1><button class="pill ${lc?"":"calm"}" id="t_alert" type="button">${lc?"Пора пополнить: "+lc:"Всё в норме"}</button></div>${showSearch?`<input id="q" class="search" type="search" placeholder="Поиск" autocomplete="off" value="${esc(q)}">`:""}`;
+  $("#topbar").innerHTML=`<div class="brand"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><h1>Мастерская<span>.</span>3D</h1><span class="cloud" id="cloud" ${SY.on?"":"hidden"}><i></i><span></span></span></div><button class="pill ${lc?"":"calm"}" id="t_alert" type="button">${lc?"Пора пополнить: "+lc:"Всё в норме"}</button></div>${showSearch?`<input id="q" class="search" type="search" placeholder="Поиск" autocomplete="off" value="${esc(q)}">`:""}`;
   const qi=$("#q");if(qi)qi.oninput=()=>{renderMain();};
+  cloudDot();
   $("#t_alert").onclick=()=>{
     if(lowCount("products")){view="products";prodSort="attention";onlyLow=true}
     else if(lowCount("plastics")){view="materials";matTab="plastics";onlyLow=true}
@@ -380,6 +397,7 @@ function render(){
 function banners(){
   let h="";
   if(!storageOk)h+=`<div class="banner bad"><p><b>Память недоступна.</b> Данные не сохранятся после закрытия. Откройте приложение в обычном окне Chrome.</p></div>`;
+  if(syncConflict)h+=`<div class="banner bad"><p><b>В Google есть данные новее.</b> Их сохранили с другого устройства ${syncConflict.at?esc(new Date(syncConflict.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}. Выберите, какие данные оставить. Второй вариант при этом заменится.</p><div class="row2"><button type="button" class="btn main" data-act="syncPull">Загрузить из Google</button><button type="button" class="btn" data-act="syncForce">Оставить данные телефона</button></div></div>`;
   if(S.notice){
     const n=S.notice;
     h+=`<div class="banner"><p><b>${n.sk||n.ce?"Данные перенесены.":"Загружен каталог из вашей таблицы."}</b> ${n.sk?"Склад перенесён со всеми остатками и журналом. ":""}${n.ce?"Цены и расчёты перенесены. ":"Цены и расчёты взяты из таблицы юнит-экономики. "}Чтобы себестоимость считалась по складу: во вкладке «Материалы» укажите цену каждого пластика и детали, затем в изделии добавьте их в «Состав» и уберите дублирующие ручные расходы.</p><div class="row2"><button type="button" class="btn main" data-act="hideNotice">Понятно</button></div></div>`;
@@ -389,8 +407,8 @@ function banners(){
 function renderMain(){
   const m=$("#main");
   m.oninput=null;m.onchange=null;
-  m.innerHTML=banners()+(view==="products"?productsHtml():view==="materials"?materialsHtml():view==="log"?logHtml():view==="plan"?planHtml():moreHtml());
-  if(view==="plan")planUpdate();
+  m.innerHTML=banners()+(view==="products"?productsHtml():view==="materials"?materialsHtml():view==="log"?logHtml():view==="plan"?salesTabHtml():moreHtml());
+  if(view==="plan"&&salesTab==="plan")planUpdate();
 }
 
 /* ================= изделия: список ================= */
@@ -851,6 +869,173 @@ function logHtml(){
   return out;
 }
 
+/* ================= синхронизация с Google ================= */
+function cloudDot(){
+  const c=$("#cloud");if(!c)return;c.hidden=!SY.on;if(!SY.on)return;
+  const pend=SY.localRev>SY.pushedRev;
+  c.className="cloud "+(SY.err?"err":pend?"wait":"ok");
+  c.querySelector("span").textContent=SY.err?"Google: нет связи":pend?"Сохраняю в Google…":SY.lastPush?"Google: сохранено "+new Date(SY.lastPush).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}):"Google";
+}
+function gUrl(){const u=(S.wbcfg.url||"").trim();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u))throw new Error("Сначала вставьте адрес веб-приложения Google: «Ещё» → «Тарифы WB».");return u}
+async function gGet(params){
+  const u=gUrl()+"?"+Object.entries(params).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+  let r;try{r=await fetch(u,{method:"GET",redirect:"follow"})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
+  try{return await r.json()}catch(e){throw new Error("Google ответил не данными. Проверьте развертывание скрипта.")}
+}
+async function gPost(body){
+  let r;try{r=await fetch(gUrl(),{method:"POST",redirect:"follow",body:JSON.stringify(body)})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
+  try{return await r.json()}catch(e){throw new Error("Google ответил не данными. Проверьте развертывание скрипта.")}
+}
+function errText(e){return e==="wrong_key"?"Ключ не совпадает с ключом в таблице. Посмотрите его в таблице: меню «WB тарифы» → «Показать ключ синхронизации».":e==="no_key"?"В таблице синхронизация ещё не включена.":e}
+function syncTables(){
+  const R=ranks(),f=v=>isFinite(v)?Math.round(v*100)/100:"";
+  const stock=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(x=>{const r=calc(x),w=r.w;return [x.name,x.sku||"",f(x.qty),f(x.min),STATE_TXT[state(x)],f(r.c.total),w?f(x.wb.pb):"",w?f(w.G):"",w?f(w.Q):"",w?f(w.margin*100):"",w?f(w.perH):"",f(Math.max(0,x.qty)*r.c.total)]});
+  const mats=[...S.plastics.map(m=>{const pk=m.pk>0?m.pk:S.p.ppk;return ["Пластик",m.name,f(m.qty),"г",f(m.min),STATE_TXT[state(m)],f(pk)+" ₽/кг",f(Math.max(0,m.qty)*pk/1000)]}),
+    ...S.parts.map(m=>["Детали",m.name,f(m.qty),m.unit,f(m.min),STATE_TXT[state(m)],f(m.price||0),f(Math.max(0,m.qty)*(m.price||0))])];
+  const log=S.log.slice(0,1000).map(e=>[new Date(e.t).toLocaleString("ru-RU"),e.text+(e.undone?" (отменено)":""),e.changes.map(c=>`${c.n}: ${c.d>0?"+":""}${n1(c.d)} ${c.u}`).join("; "),e.note||""]);
+  return {stock:{head:["Изделие","Артикул WB","Остаток, шт","Минимум","Статус","Себестоимость, ₽","Цена до скидки, ₽","Цена после скидки, ₽","Прибыль/шт, ₽","Маржа, %","₽ за час печати","Остаток по себестоимости, ₽"],rows:stock},
+    mats:{head:["Раздел","Название","Остаток","Ед.","Минимум","Статус","Цена","Сумма, ₽"],rows:mats},
+    log:{head:["Дата","Операция","Изменения","Комментарий"],rows:log}};
+}
+async function syncPush(o={}){
+  if(!SY.on&&!o.first)return false;
+  if(pushing){pushAgain=true;return false}
+  pushing=true;let ok=false;
+  try{
+    const rev=SY.localRev||Date.now();
+    const d=await gPost({action:"push",key:SY.key,device:SY.device,rev,base:SY.base,state:JSON.stringify(S),tables:syncTables(),first:!!o.first,force:!!o.force});
+    if(d&&d.ok){SY.base=d.rev;SY.pushedRev=rev;SY.localRev=Math.max(SY.localRev,rev);SY.lastPush=Date.now();SY.err="";syncConflict=null;ok=true}
+    else if(d&&d.error==="conflict"){syncConflict=d;SY.err="";if(view!=="prod")renderMain()}
+    else SY.err=errText(d&&d.error||"Ошибка");
+  }catch(e){SY.err=e.message}
+  finally{pushing=false;saveSync();cloudDot();if(view==="more")renderMain();if(pushAgain){pushAgain=false;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncPush(),3000)}}
+  return ok;
+}
+async function syncCheck(){
+  if(!SY.on)return;
+  try{
+    const d=await gGet({action:"meta",key:SY.key});
+    if(!d.ok){SY.err=errText(d.error);saveSync();cloudDot();return}
+    SY.err="";
+    if(d.rev>SY.base&&d.device!==SY.device){syncConflict=d;if(view!=="prod")renderMain()}
+    else if(SY.localRev>SY.pushedRev)syncPush();
+  }catch(e){SY.err=e.message}
+  saveSync();cloudDot();
+}
+async function syncPull(key){
+  const d=await gGet({action:"pull",key:key||SY.key});
+  if(!d.ok)throw new Error(errText(d.error));
+  let st;try{st=JSON.parse(d.state)}catch(e){throw new Error("Данные в таблице повреждены")}
+  if(!valid(st))throw new Error("В таблице нет данных мастерской");
+  S=normalize(st);lastJson="";save();
+  SY.on=true;if(key)SY.key=key;SY.base=d.rev;SY.localRev=SY.pushedRev=d.rev;SY.lastPush=Date.now();SY.err="";syncConflict=null;saveSync();
+}
+function randKey(){const a=new Uint8Array(15);(crypto||window.crypto).getRandomValues(a);return [...a].map(b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("").replace(/(.{5})(?!$)/g,"$1-")}
+async function syncEnable(btn){
+  if(btn){btn.disabled=true;btn.textContent="Подключаю…"}
+  try{
+    const p=await gGet({action:"ping"});
+    if(!p||!(p.v>=2))throw new Error("Скрипт в таблице старой версии. Обновите код скрипта (инструкция, раздел «Обновление скрипта»).");
+    if(p.sync){renderMain();openKeySheet(true);return}
+    SY.key=randKey();SY.on=true;SY.base=0;SY.localRev=Date.now();SY.pushedRev=0;saveSync();
+    const ok=await syncPush({first:true});
+    if(!ok){SY.on=false;saveSync();throw new Error(SY.err||"Не удалось сохранить")}
+    toast("Синхронизация включена");
+  }catch(e){openSheet(`<h2>Не получилось</h2><p class="sub" style="margin:0">${esc(e.message)}</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet)}
+  topBar();renderMain();
+}
+function openKeySheet(exists){
+  openSheet(`<h2>${exists?"В Google уже есть данные":"Восстановить из Google"}</h2>
+   <p class="sub" style="margin:0">Введите ключ синхронизации. Его можно посмотреть в таблице: меню «WB тарифы» → «Показать ключ синхронизации».</p>
+   <input id="k_in" class="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx" autofocus>
+   <div class="row2"><button type="button" class="btn main" id="k_pull">Загрузить данные из Google</button>${exists?`<button type="button" class="btn" id="k_push">Заменить данными телефона</button>`:""}<button type="button" class="btn ghost" id="k_no">Отмена</button></div>
+   <p class="hint">Загрузка заменит данные на этом телефоне. «Заменить данными телефона» запишет в Google то, что сейчас в приложении.</p>`,s=>{
+    const key=()=>s.querySelector("#k_in").value.trim();
+    s.querySelector("#k_no").onclick=closeSheet;
+    s.querySelector("#k_pull").onclick=async()=>{if(!key()){toast("Введите ключ");return}try{await syncPull(key());closeSheet();view="products";render();toast("Данные загружены из Google")}catch(e){toast(e.message)}};
+    const kp=s.querySelector("#k_push");if(kp)kp.onclick=async()=>{if(!key()){toast("Введите ключ");return}SY.key=key();SY.on=true;SY.localRev=Date.now();saveSync();const ok=await syncPush({force:true});if(ok){closeSheet();toast("Данные телефона сохранены в Google")}else{SY.on=false;saveSync();toast(SY.err||"Не получилось")}topBar();renderMain()};
+  });
+}
+function syncCardHtml(){
+  if(!S.wbcfg.url)return `<div class="card"><h2>Синхронизация с Google</h2><p>Копия всех данных в вашей Google Таблице, сохраняется автоматически после каждого изменения. Сначала подключите таблицу: вставьте адрес в карточке «Тарифы WB».</p></div>`;
+  if(!SY.on)return `<div class="card"><h2>Синхронизация с Google</h2><p>После каждого изменения приложение само сохраняет все данные в вашу Google Таблицу. Там же появятся листы «Склад», «Материалы» и «Журнал». Если телефон потеряется, всё можно восстановить. Раздел «Продажи» тоже работает через синхронизацию.</p>
+   <div class="row2"><button class="btn main" type="button" data-act="syncOn">Включить</button><button class="btn" type="button" data-act="syncRestore">Восстановить из Google</button></div></div>`;
+  const pend=SY.localRev>SY.pushedRev;
+  return `<div class="card"><h2>Синхронизация с Google</h2>
+   <p>${SY.err?`<span class="neg">${esc(SY.err)}</span>`:pend?"Есть изменения, сохраняю…":SY.lastPush?"Всё сохранено: "+esc(new Date(SY.lastPush).toLocaleString("ru-RU")):"Включена."}</p>
+   <p>Ключ синхронизации нужен, чтобы восстановить данные на новом телефоне. Он также есть в таблице.</p><div class="keybox">${esc(SY.key)}</div>
+   <div class="row2"><button class="btn main" type="button" data-act="syncNow">Сохранить сейчас</button><button class="btn" type="button" data-act="syncPullAsk">Загрузить из Google</button><button class="btn ghost" type="button" data-act="syncOff">Выключить</button></div></div>`;
+}
+
+/* ================= продажи ================= */
+const SAKEY="master3d_sales";
+let salesTab="sales",salesMonth=null,salesCache=null;
+const MONTHS=["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+const mLabel=(m,short)=>{const [y,mm]=m.split("-");const n=MONTHS[+mm-1];return short?n.slice(0,3):n[0].toUpperCase()+n.slice(1)+" "+y};
+function salesLoad(){if(salesCache)return salesCache;try{salesCache=JSON.parse(localStorage.getItem(SAKEY)||"null")}catch(e){}return salesCache}
+async function salesFetch(btn){
+  if(btn){btn.disabled=true;btn.textContent="Загружаю…"}
+  try{const d=await gGet({action:"sales",key:SY.key,months:13});if(!d.ok)throw new Error(errText(d.error));
+    salesCache={at:d.at,from:d.from,months:d.months,rows:d.rows,fetched:Date.now()};try{localStorage.setItem(SAKEY,JSON.stringify(salesCache))}catch(e){}
+    if(!salesMonth||!d.months.includes(salesMonth))salesMonth=d.months[0];toast("Продажи обновлены")}
+  catch(e){toast(e.message)}
+  if(view==="plan")renderMain();
+}
+function matchProd(row){const nm=String(row.nm),art=String(row.art||"").trim().toLowerCase();
+  return S.products.find(p=>{const k=String(p.sku||"").trim();return k&&(k===nm||k.toLowerCase()===art)})||null}
+function salesAgg(rows){
+  const P=S.p,by={};let tot={n:0,r:0,rev:0,pay:0,profit:0,unmatched:0};
+  for(const o of rows){
+    const p=matchProd(o),key=p?p.id:"nm"+o.nm;
+    const a=by[key]||(by[key]={p,o,n:0,r:0,rev:0,pay:0,profit:p?0:null});
+    a.n+=o.n;a.r+=o.r;a.rev+=o.rev;a.pay+=o.pay;
+    if(p){const net=o.n-o.r,w=p.wb||{},L=(w.lb>0?w.lb:P.lb)/(w.buy>0?w.buy:P.buy),ads=w.ads!=null?w.ads:P.ads;
+      a.profit+=o.pay-net*L-ads*o.rev-P.tax*o.rev-net*cost(p).total}
+  }
+  const list=Object.values(by).sort((a,b)=>b.rev-a.rev);
+  for(const a of list){tot.n+=a.n;tot.r+=a.r;tot.rev+=a.rev;tot.pay+=a.pay;if(a.p)tot.profit+=a.profit;else tot.unmatched+=a.n-a.r}
+  return {list,tot};
+}
+function salesChart(c){
+  const months=c.months.slice(0,12).reverse();
+  const data=months.map(m=>{const a=salesAgg(c.rows.filter(r=>r.m===m)).tot;return {m,rev:a.rev,pr:a.profit}});
+  if(!data.some(d=>d.rev))return "";
+  const W=340,H=150,top=12,bot=22,max=Math.max(...data.map(d=>Math.max(d.rev,d.pr)),1),min=Math.min(0,...data.map(d=>d.pr));
+  const y=v=>top+(H-top-bot)*(max-v)/(max-min),bw=(W-8)/data.length;
+  const bars=data.map((d,i)=>{const x=4+i*bw,w=bw*0.36;const y0=y(0);
+    const rv=`<rect x="${x+bw*0.12}" y="${y(d.rev)}" width="${w}" height="${Math.max(0,y0-y(d.rev))}" rx="2" fill="var(--c2)"><title>${mLabel(d.m)}: выручка ${rub(d.rev)}</title></rect>`;
+    const py=d.pr>=0?y(d.pr):y0,ph=Math.abs(y(d.pr)-y0);
+    const pr=`<rect x="${x+bw*0.12+w+2}" y="${py}" width="${w}" height="${ph}" rx="2" fill="${d.pr>=0?"var(--c1)":"var(--bad)"}"><title>${mLabel(d.m)}: прибыль ≈ ${rub(d.pr)}</title></rect>`;
+    return rv+pr+`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle"${d.m===salesMonth?' style="fill:var(--fg);font-weight:700"':""}>${mLabel(d.m,true)}</text>`}).join("");
+  return `<section class="sec"><h2>По месяцам <small>последние ${data.length}</small></h2><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Выручка и прибыль по месяцам"><line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>${bars}</svg>
+   <div class="legend"><span><i style="background:var(--c2)"></i>Выручка</span><span><i style="background:var(--c1)"></i>Прибыль ≈</span></div></section>`;
+}
+function salesTabHtml(){
+  const seg=`<div class="seg"><button type="button" data-stab="sales" class="${salesTab==="sales"?"on":""}">Продажи WB</button><button type="button" data-stab="plan" class="${salesTab==="plan"?"on":""}">План на месяц</button></div>`;
+  return seg+(salesTab==="plan"?planHtml():salesHtml());
+}
+function salesHtml(){
+  if(!SY.on)return `<div class="empty"><b>Продажи приходят из WB через вашу Google Таблицу</b>Включите синхронизацию: «Ещё» → «Синхронизация с Google». Ключ защищает ваши продажи от посторонних.<div class="row2" style="margin-top:12px"><button type="button" class="btn main" data-act="goMore">Открыть настройки</button></div></div>`;
+  const c=salesLoad();
+  const upd=`<div class="wbbar"><div><b>Данные из WB</b><small>${c&&c.at?"WB → таблица: "+esc(new Date(c.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):"ещё не загружались"}${c?" · в телефоне с "+esc(new Date(c.fetched).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})):""}</small></div><button type="button" class="btn small main" data-act="salesFetch">Обновить</button></div>`;
+  if(!c)return upd+`<div class="empty"><b>Нажмите «Обновить»</b>Таблица загружает продажи из WB каждый день в 6:00. Первый раз в таблице выберите «WB тарифы» → «Загрузить продажи сейчас».</div>`;
+  const withData=c.months.filter(m=>c.rows.some(r=>r.m===m));
+  if(!salesMonth||!c.months.includes(salesMonth))salesMonth=withData[0]||c.months[0];
+  const chips=`<div class="months">${c.months.filter(m=>withData.includes(m)||m===c.months[0]).map(m=>`<button type="button" class="chip ${m===salesMonth?"on":""}" data-month="${m}">${mLabel(m)}</button>`).join("")}</div>`;
+  const rows=c.rows.filter(r=>r.m===salesMonth),A=salesAgg(rows),t=A.tot;
+  if(!rows.length)return upd+chips+`<div class="empty"><b>Продаж за ${mLabel(salesMonth).toLowerCase()} нет</b>WB отдаёт данные с задержкой до 30 минут.</div>`+salesChart(c);
+  const kp=`<div class="kpis"><div class="kpi"><span>Продано</span><b>${n1(t.n-t.r,0)} шт</b><small>${t.r?`возвратов ${n1(t.r,0)}`:"без возвратов"}</small></div><div class="kpi"><span>Выручка</span><b>${rub(t.rev)}</b><small>к перечислению ${rub(t.pay)}</small></div><div class="kpi"><span>Прибыль ≈</span><b class="${t.profit<0?"neg":""}">${rub(t.profit)}</b><small>${t.unmatched?`без ${n1(t.unmatched,0)} шт не привязанных`:"оценка по вашим ставкам"}</small></div></div>`;
+  const list=`<section class="sec"><h2>По изделиям <small>${mLabel(salesMonth)}</small></h2><div class="scroll"><table class="t"><thead><tr><th>Изделие</th><th>Шт</th><th>Выручка</th><th>Прибыль ≈</th></tr></thead><tbody>${A.list.map(a=>`<tr><td>${a.p?esc(a.p.name):`<span class="neg">Арт. ${esc(a.o.nm)}</span> <small class="hint">${esc(a.o.subj||"")} · ${esc(a.o.art||"")}</small><br><button type="button" class="undo" data-bind="${esc(a.o.nm)}">Привязать к изделию</button>`}</td><td>${n1(a.n-a.r,0)}${a.r?`<br><small class="hint">−${a.r} возвр.</small>`:""}</td><td>${rub(a.rev)}</td><td class="${a.profit<0?"neg":""}">${a.p?rub(a.profit):"—"}</td></tr>`).join("")}</tbody></table></div>
+   <p class="hint">Выручка — по вашей цене после скидки, до СПП. Прибыль ≈ = к перечислению от WB − логистика − реклама − налог − себестоимость, по ставкам из карточек изделий. WB уточняет суммы в течение суток, точные цифры будут в еженедельном отчёте о реализации.</p></section>`;
+  return upd+chips+kp+salesChart(c)+list;
+}
+function openBind(nm){
+  const items=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+  openSheet(`<h2>Артикул WB ${esc(nm)}</h2><p class="sub">Выберите изделие. Артикул запишется в его карточку, и продажи будут считаться по нему.</p><div class="subjlist">${items.map(p=>`<button type="button" data-pid="${p.id}"><span><b>${esc(p.name)}</b><small>${p.sku?"сейчас артикул "+esc(p.sku):"артикул не указан"}</small></span></button>`).join("")}</div>`,s=>{
+    s.querySelectorAll("[data-pid]").forEach(b=>b.onclick=()=>{const p=find("products",b.dataset.pid);p.sku=String(nm);save();closeSheet();renderMain();toast("Привязано: "+p.name)});
+  });
+}
+
 /* ================= план ================= */
 function planHtml(){
   const items=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
@@ -891,7 +1076,7 @@ function moreHtml(){
    ${whs.length?`<div class="grid2"><label class="field"><span>Склад для логистики</span><select id="wb_wh" class="inp">${whs.map(w=>`<option value="${esc(w.name)}" ${curW&&w.name===curW.name?"selected":""}>${esc(w.name)} — ${n1(cfg.model==="fbw"?w.fbw1:w.fbs1,1)} ₽</option>`).join("")}</select><small>FBS: строка «Маркетплейс» вашего региона</small></label>
    <label class="field"><span>Схема продаж</span><select id="wb_model" class="inp">${Object.keys(MODEL_TXT).map(k=>`<option value="${k}" ${cfg.model===k?"selected":""}>${MODEL_TXT[k]}</option>`).join("")}</select><small>какую комиссию брать</small></label></div>`:""}
    <div class="row2"><button class="btn main" type="button" data-act="wbConnect">${wc?"Обновить тарифы":"Подключить"}</button>${cfg.url?`<button class="btn ghost" type="button" data-act="wbOff">Отключить</button>`:""}</div></div>`;
-  return wbCard+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
+  return wbCard+syncCardHtml()+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
    <div class="row2"><button class="btn main" type="button" data-act="exportJson">Сохранить копию в файл</button><button class="btn" type="button" data-act="copyJson">Скопировать как текст</button></div></div>
   <div class="card"><h2>Загрузить копию</h2><p>Подходят копии этого приложения и старых «Склад 3D» и «Цена 3D». Две старые копии можно загрузить по очереди — они объединятся.</p>
    <label class="btn" for="fileIn">Выбрать файл .json</label><input id="fileIn" type="file" accept=".json,application/json,text/plain" hidden>
@@ -946,9 +1131,21 @@ $("#main").addEventListener("click",e=>{
   const row=e.target.closest(".row[data-c]");if(row){openMat(row.dataset.c,row.dataset.id);return}
   const u=e.target.closest("[data-undo]");if(u){undo(u.dataset.undo);return}
   const so=e.target.closest("[data-sort]");if(so){prodSort=so.dataset.sort;onlyLow=false;renderMain();return}
+  const st=e.target.closest("[data-stab]");if(st){salesTab=st.dataset.stab;renderMain();return}
+  const mo=e.target.closest("[data-month]");if(mo){salesMonth=mo.dataset.month;renderMain();return}
+  const bd=e.target.closest("[data-bind]");if(bd){openBind(bd.dataset.bind);return}
   const mt=e.target.closest("[data-mat]");if(mt){matTab=mt.dataset.mat;onlyLow=false;render();return}
   const a=e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
   if(act==="hideNotice"){delete S.notice;save();renderMain()}
+  if(act==="syncOn")syncEnable(a);
+  if(act==="syncRestore")openKeySheet(false);
+  if(act==="syncNow"){a.disabled=true;a.textContent="Сохраняю…";SY.localRev=Math.max(SY.localRev,Date.now());syncPush().then(ok=>{toast(ok?"Сохранено в Google":SY.err||"Не получилось");renderMain()})}
+  if(act==="syncPullAsk")confirmSheet("Загрузить из Google?","Данные на этом телефоне заменятся тем, что сохранено в таблице.","Загрузить",async()=>{try{await syncPull();view="products";render();toast("Данные загружены")}catch(e){toast(e.message)}},false);
+  if(act==="syncPull")confirmSheet("Загрузить из Google?","Данные на этом телефоне заменятся более новыми из таблицы.","Загрузить",async()=>{try{await syncPull();view="products";render();toast("Данные загружены")}catch(e){toast(e.message)}},false);
+  if(act==="syncForce")confirmSheet("Оставить данные телефона?","Данные в Google заменятся тем, что сейчас на этом телефоне.","Заменить в Google",async()=>{SY.localRev=Date.now();const ok=await syncPush({force:true});syncConflict=null;renderMain();toast(ok?"Сохранено в Google":SY.err)});
+  if(act==="syncOff")confirmSheet("Выключить синхронизацию?","Данные в Google останутся, но новые изменения туда сохраняться не будут.","Выключить",()=>{SY.on=false;saveSync();topBar();renderMain();toast("Синхронизация выключена")});
+  if(act==="salesFetch")salesFetch(a);
+  if(act==="goMore"){view="more";render()}
   if(act==="wbUpdate")wbUpdate(a);
   if(act==="wbConnect"){const u=$("#wb_url").value.trim();if(u!==S.wbcfg.url){S.wbcfg.url=u;save()}if(!u){toast("Вставьте адрес веб-приложения");return}a.disabled=true;a.textContent="Подключаю…";wbUpdate(null).then(()=>{if(view==="more")renderMain()})}
   if(act==="wbOff")confirmSheet("Отключить тарифы WB?","Автообновление в приложении выключится. Предметы у изделий сохранятся, скрипт в Google продолжит присылать письма.","Отключить",()=>{S.wbcfg={...WBCFG_DEF};S.wbSnap=null;wbSaveCache(null);try{localStorage.removeItem(WBC)}catch(e){}save();renderMain();toast("Отключено")});
@@ -964,7 +1161,7 @@ $("#main").addEventListener("click",e=>{
   if(act==="wipe")confirmSheet("Очистить всё?","Удалятся изделия, материалы и журнал. Вернуть можно только из копии.","Очистить",()=>{S=normalize({v:2,p:S.p,wbcfg:S.wbcfg,products:[],plastics:[],parts:[],log:[]});S.wbSnap=null;save();view="products";render();toast("Очищено")});
 });
 $("#main").addEventListener("change",e=>{
-  if(e.target.id==="wb_url"){S.wbcfg.url=e.target.value.trim();save()}
+  if(e.target.id==="wb_url"){const nu=e.target.value.trim();if(nu!==S.wbcfg.url){S.wbcfg.url=nu;save();renderMain()}}
   if(e.target.id==="wb_wh"){S.wbcfg.wh=e.target.value;save();toast("Склад выбран. Тариф запомнится при следующем обновлении")}
   if(e.target.id==="wb_model"){S.wbcfg.model=e.target.value;save();renderMain();toast("Схема изменена")}
   if(e.target.id==="fileIn"){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>handleImport(String(r.result));r.readAsText(f);e.target.value=""}
@@ -975,8 +1172,10 @@ $("#main").addEventListener("input",e=>{
 });
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
-window.__m={calc,S:()=>S,migrate,wholesale,wbPropose,wbT};
+window.__m={calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
+if(SY.on)setTimeout(syncCheck,800);
+document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
 })();
 </script>
 
