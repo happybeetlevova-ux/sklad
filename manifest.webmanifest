@@ -1,6 +1,6 @@
 {
- "name": "Склад мастерской",
- "short_name": "Склад 3D",
+ "name": "Мастерская 3D",
+ "short_name": "Мастерская",
  "lang": "ru",
  "start_url": "./",
  "scope": "./",
