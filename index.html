@@ -1142,9 +1142,9 @@ async function payoutsFetch(){
   try{const d=await gGet({action:"payouts",key:SY.key});if(!d||!d.ok||!Array.isArray(d.rows))return 0;
     let n=0;const up=(ref,e)=>{const ex=S.money.find(m=>m.ref===ref);if(ex){if(ex.userCat){ex.amount=e.amount;ex.t=e.t}else Object.assign(ex,e)}else{S.money.push({id:uid(),...e,ref});n++}};
     for(const r of d.rows){const t=new Date(String(r.to).slice(0,10)+"T12:00:00").getTime(),per=`${new Date(String(r.from).slice(0,10)).toLocaleDateString("ru-RU")}–${new Date(String(r.to).slice(0,10)).toLocaleDateString("ru-RU")}`;
-      const extra=Math.max(0,(r.add||0))+Math.max(0,-(r.ded||0));const big=extra>=3000?Math.round(extra*100)/100:0;const main=Math.round((r.total-big)*100)/100;
-      up("wbrep:"+r.id,{type:main<0?"out":"in",cat:main<0?"Удержание WB":"Выплата WB",amount:Math.abs(main),t,note:`Отчёт № ${r.id}, ${per}`});
-      if(big)up("wbrep:"+r.id+":extra",{type:"in",cat:"Доплата WB (проверьте)",amount:big,t,note:`Отчёт № ${r.id}, ${per}: доплаты и возвраты удержаний`,flag:"Крупная доплата в отчёте WB. Если это деньги, которые вы сами вносили на баланс, смените статью на «Свои деньги (взнос)» — тогда они не будут считаться доходом."})}
+      const extra=Math.max(0,-(r.ded||0));const big=extra>=3000?Math.round(extra*100)/100:0;const main=Math.round((r.total-big)*100)/100;
+      up("wbrep:"+r.id,{type:main<0?"out":"in",cat:main<0?"Удержание WB":"Выплата WB",amount:Math.abs(main),t,note:`Отчёт № ${r.id}, ${per}${d.mode==="estimate"?" (≈ по детализации)":""}`});
+      if(big)up("wbrep:"+r.id+":extra",{type:"in",cat:"Доплата WB (проверьте)",amount:big,t,note:`Отчёт № ${r.id}, ${per}: «Прочие удержания/выплаты» в вашу пользу`,flag:"Крупная доплата в отчёте WB. Если это деньги, которые вы сами вносили на баланс, смените статью на «Свои деньги (взнос)» — тогда они не будут считаться доходом."})}
     if(d.rows.length)save();return n}catch(e){return 0}
 }
 function matchProd(row){const nm=String(row.nm),art=String(row.art||"").trim().toLowerCase();
