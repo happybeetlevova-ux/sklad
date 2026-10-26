@@ -286,7 +286,10 @@ function normName(s){return String(s||"").toLowerCase().replace(/ё/g,"е").repl
 function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true},o||{})}
 const WBCFG_DEF={url:"",wh:"",model:"fbs",last:""};
 const UI_DEF={accent:"teal",mode:"auto"};
-function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(d.wbSnap===undefined)d.wbSnap=null;d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true});return d}
+function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(!Array.isArray(d.buyers)){d.buyers=[];
+  d.deals.slice().sort((a,b)=>a.t-b.t).forEach(x=>{if(!x.buyer)return;let b=d.buyers.find(y=>y.name.toLowerCase()===String(x.buyer).toLowerCase());
+    if(!b){b={id:uid(),name:x.buyer,tax:x.tax,phone:"",note:"",disc:0,prices:{}};d.buyers.push(b)}b.tax=x.tax;b.prices[x.pid]=x.price;x.bid=b.id})}
+  if(d.wbSnap===undefined)d.wbSnap=null;d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true});return d}
 function migrate(sk,ce){
   const p={...DEF,...((ce&&ce.p)||{})};
   const D={v:2,p,products:[],plastics:[],parts:[],log:[]};
@@ -550,13 +553,14 @@ function openAction(c,id,op,after){
   else chips=[10,50,100];
   chips=chips.map(x=>Array.isArray(x)?x:[x,"+"+x]);
   const isShip=c==="products"&&op==="ship";
-  const buyers=[...new Set(S.deals.map(d=>d.buyer).filter(Boolean))];
+  const buyers=S.buyers.map(b=>b.name).sort((a,b)=>a.localeCompare(b,"ru"));
   const shipField=isShip?`<div class="chan" id="a_chan"><button type="button" class="on" data-ch="wb">WB / свой кабинет</button><button type="button" data-ch="opt">Опт</button></div>
     <div id="a_opt" hidden style="display:flex;flex-direction:column;gap:12px">
       <datalist id="buyers">${buyers.map(b=>`<option value="${esc(b)}">`).join("")}</datalist>
       <label class="field"><span>Покупатель</span><input id="a_buyer" class="inp" list="buyers" placeholder="Имя или название" autocomplete="off"></label>
       <div class="grid2"><label class="field"><span>Цена за 1 шт, ₽</span><input id="a_price" class="inp" type="text" inputmode="decimal"><small id="a_phint"></small></label>
       <label class="field"><span>Налог</span><select id="a_tax" class="inp"><option value="0.06">6% — ИП, организация</option><option value="0.04">4% — частное лицо</option><option value="0">Без налога</option></select></label></div>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="a_remember" checked> Запомнить цену в прайсе покупателя</label>
       <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="a_paidnow" checked> Деньги уже получены</label>
     </div>`:"";
   const paidField=op==="in"&&c!=="products"?`<div class="field"><span>Заплатил за эту поставку, ₽ (необязательно)</span><input id="a_paid" class="inp" type="text" inputmode="decimal" placeholder="Например: 1450"><small>Средняя цена ${c==="plastics"?"за кг":"за "+esc(u)} пересчитается, и себестоимость изделий обновится</small></div>`:"";
@@ -573,13 +577,16 @@ function openAction(c,id,op,after){
     const optVals=()=>{if(chan!=="opt")return null;return {buyer:s.querySelector("#a_buyer").value.trim(),price:num(s.querySelector("#a_price").value),tax:+s.querySelector("#a_tax").value,paidNow:s.querySelector("#a_paidnow").checked}};
     const suggest=()=>{
       const b=s.querySelector("#a_buyer").value.trim(),pi=s.querySelector("#a_price"),h=s.querySelector("#a_phint");
+      const bo=buyerByName(b);
+      if(bo){s.querySelector("#a_tax").value=String(bo.tax);const bp=buyerPrice(bo,it);if(bp){if(!pi.dataset.touched)pi.value=dec(bp.price);h.textContent=bp.src;return}}
+      else if(b)h.textContent="новый покупатель — появится в справочнике";
       const prevDeal=S.deals.filter(d=>d.pid===id&&(!b||d.buyer===b)).sort((x,y)=>y.t-x.t)[0]||S.deals.filter(d=>d.pid===id).sort((x,y)=>y.t-x.t)[0];
-      if(prevDeal){if(!pi.dataset.touched)pi.value=dec(prevDeal.price);h.textContent="в прошлый раз "+rub(prevDeal.price)+(prevDeal.buyer?" ("+prevDeal.buyer+")":"");if(b&&prevDeal.buyer===b)s.querySelector("#a_tax").value=String(prevDeal.tax);return}
+      if(prevDeal){if(!pi.dataset.touched)pi.value=dec(prevDeal.price);h.textContent=(b&&!bo?"новый покупатель · ":"")+"последняя цена "+rub(prevDeal.price)+(prevDeal.buyer?" ("+prevDeal.buyer+")":"");return}
       const r=calc(it);if(r.w){const o=wholesale(r.c.total,r.w.G,it.wb.comm,r.w.L,0.07);if(!pi.dataset.touched)pi.value=String(o.opt);h.textContent="расчётная оптовая цена; себестоимость "+rub(r.c.total)}else h.textContent="себестоимость "+rub(r.c.total);
     };
     if(isShip){
       s.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>{chan=b.dataset.ch;s.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===b));s.querySelector("#a_opt").hidden=chan!=="opt";if(chan==="opt")suggest();upd()});
-      s.querySelector("#a_buyer").addEventListener("change",()=>{suggest();upd()});
+      s.querySelector("#a_buyer").addEventListener("change",()=>{const pi=s.querySelector("#a_price");delete pi.dataset.touched;suggest();upd()});
       s.querySelector("#a_price").addEventListener("input",e=>{e.target.dataset.touched="1";upd()});
       s.querySelector("#a_tax").addEventListener("change",()=>upd());
     }
@@ -614,7 +621,9 @@ function openAction(c,id,op,after){
       const text=ov?`Опт: ${it.name} × ${n1(n)} → ${ov.buyer}`:{print:`Напечатано: ${it.name} × ${n1(n)}`,ship:`Отгружено: ${it.name} × ${n1(n)}`,in:`Приход: ${it.name}`,out:`Расход: ${it.name}`,set:`Пересчёт: ${it.name}`}[op];
       const note=[s.querySelector("#a_note").value.trim(),np?`оплачено ${rub(num(paid.value))}`:"",ov?`${rub(ov.price)}/шт, налог ${pct(ov.tax,0)}${ov.paidNow?"":", ждём оплату"}`:""].filter(Boolean).join(" · ");
       const ok=commit(text,ch,note);if(!ok&&np)save();
-      if(ok&&ov){const d={id:uid(),t:ok.t,buyer:ov.buyer,pid:id,name:it.name,q:n,price:ov.price,sum:Math.round(ov.price*n*100)/100,tax:ov.tax,paidAt:ov.paidNow?ok.t:null};S.deals.push(d);ok.dealId=d.id;
+      if(ok&&ov){let bo=buyerByName(ov.buyer);if(!bo){bo={id:uid(),name:ov.buyer,tax:ov.tax,phone:"",note:"",disc:0,prices:{}};S.buyers.push(bo)}
+        if(s.querySelector("#a_remember").checked)bo.prices[id]=ov.price;
+        const d={id:uid(),t:ok.t,buyer:bo.name,bid:bo.id,pid:id,name:it.name,q:n,price:ov.price,sum:Math.round(ov.price*n*100)/100,cost:Math.round(cost(it).total*n*100)/100,tax:ov.tax,paidAt:ov.paidNow?ok.t:null};S.deals.push(d);ok.dealId=d.id;
         if(ov.paidNow)S.money.push({id:uid(),t:ok.t,type:"in",cat:"Опт",amount:d.sum,note:`${ov.buyer}: ${it.name} × ${n1(n)}`,ref:d.id});save()}
       if(ok&&np){const m={id:uid(),t:ok.t,type:"out",cat:c==="plastics"?"Пластик":"Детали и упаковка",amount:num(paid.value),note:`${it.name}, ${n1(n)} ${u}`,ref:ok.id};S.money.push(m);ok.moneyId=m.id;save()}
       closeSheet();
@@ -672,7 +681,7 @@ function renderProd(){
   <section class="sec stockcard" id="stockSec"></section>
   <section class="sec"><h2>Изделие</h2>
     <label class="field"><span>Название</span><input id="f_name" class="inp" type="text" value="${esc(d.name)}" placeholder="Например: Подставка под телефон"></label>
-    <div class="grid2">${F("f_sku","Артикул WB",d.sku,"","",'inputmode="numeric"')}${F("f_min","Минимум на складе",dec(d.min),"шт","ниже — «пополнить»")}</div>
+    <div class="grid2">${F("f_sku","Артикул WB",d.sku,"","",'inputmode="numeric"')}${F("f_opt","Оптовая цена (базовая)",d.opt>0?dec(d.opt):"","₽","от неё считаются скидки покупателей")}${F("f_min","Минимум на складе",dec(d.min),"шт","ниже — «пополнить»")}</div>
     ${F("f_h","Время печати 1 шт",d.h>0?dec(d.h):"","","из Bambu Studio: «1:22», «1ч 22м» или «1,36»")}<p class="hint" id="h_time"></p>
   </section>
   <section class="sec"><h2>Состав на 1 шт <small>списывается со склада при печати</small></h2>
@@ -751,7 +760,7 @@ function drawEx(){
 function readForm(){
   const v=id=>{const e=$("#"+id);return e?e.value:""},n=id=>num(v(id)),p=id=>{const x=n(id);return isFinite(x)?x/100:NaN};
   const d=draft;if(!$("#f_name"))return;
-  d.name=v("f_name").trim();d.sku=v("f_sku").trim();const mn=n("f_min");d.min=mn>=0?mn:0;
+  d.name=v("f_name").trim();d.sku=v("f_sku").trim();const op_=n("f_opt");d.opt=op_>0?op_:0;const mn=n("f_min");d.min=mn>=0?mn:0;
   d.h=parseTime(v("f_h"));const g0=n("f_g0");d.g0=g0>0?g0:0;
   const pl=[],pt=[];document.querySelectorAll("#recBox .rec").forEach(r=>{const q=num(r.querySelector("input").value);(r.dataset.k==="pl"?pl:pt).push({id:r.querySelector("select").value,q:q>0?q:0})});d.rec={pl,pt};
   d.ex=[...document.querySelectorAll("#exBox .rec")].map(r=>{const ins=r.querySelectorAll("input");const val=num(ins[1].value);return {n:ins[0].value.trim(),v:val>0?val:0}});
@@ -980,7 +989,7 @@ function syncTables(){
     mats:{head:["Раздел","Название","Остаток","Ед.","Минимум","Статус","Цена","Сумма, ₽"],rows:mats},
     log:{head:["Дата","Операция","Изменения","Комментарий"],rows:log},
     money:{head:["Дата","Приход/расход","Статья","Сумма, ₽","Комментарий"],rows:S.money.slice().sort((a,b)=>b.t-a.t).map(x=>[new Date(x.t).toLocaleDateString("ru-RU"),x.type==="in"?"Приход":"Расход",x.cat,f(x.amount),x.note||""])},
-    deals:{head:["Дата","Покупатель","Изделие","Шт","Цена, ₽","Сумма, ₽","Налог","Оплачено"],rows:S.deals.slice().sort((a,b)=>b.t-a.t).map(d=>[new Date(d.t).toLocaleDateString("ru-RU"),d.buyer,d.name,f(d.q),f(d.price),f(d.sum),d.tax?Math.round(d.tax*100)+"%":"без налога",d.paidAt?new Date(d.paidAt).toLocaleDateString("ru-RU"):"ждём"])}};
+    deals:{head:["Дата","Покупатель","Изделие","Шт","Цена, ₽","Сумма, ₽","Налог","Оплачено","Прибыль, ₽"],rows:S.deals.slice().sort((a,b)=>b.t-a.t).map(d=>[new Date(d.t).toLocaleDateString("ru-RU"),d.buyer,d.name,f(d.q),f(d.price),f(d.sum),d.tax?Math.round(d.tax*100)+"%":"без налога",d.paidAt?new Date(d.paidAt).toLocaleDateString("ru-RU"):"ждём",f(dealProfit(d))])}};
 }
 async function syncPush(o={}){
   if(!SY.on&&!o.first)return false;
@@ -1164,10 +1173,10 @@ function cashHtml(){
   const unpaid=S.deals.filter(d=>!d.paidAt).sort((a,b)=>a.t-b.t);
   const debts=unpaid.length?`<section class="sec"><h2>Ждём оплату <small>${rub(unpaid.reduce((a,d)=>a+d.sum,0))}</small></h2>${unpaid.map(d=>`<div class="opline"><span>${esc(d.buyer)}<small>${esc(d.name)} × ${n1(d.q)} · ${new Date(d.t).toLocaleDateString("ru-RU")}</small></span><b>${rub(d.sum)}</b><button type="button" class="btn small main" data-paydeal="${d.id}">Оплачено</button></div>`).join("")}</section>`:"";
   const dealsM=S.deals.filter(d=>mk(d.t)===cashMonth).sort((a,b)=>b.t-a.t);
-  const deals=dealsM.length?`<section class="sec"><h2>Опт за месяц <small>${rub(dealsM.reduce((a,d)=>a+d.sum,0))}</small></h2>${dealsM.map(d=>`<div class="opline"><span>${esc(d.buyer)}<small>${esc(d.name)} × ${n1(d.q)} по ${rub(d.price)} · налог ${pct(d.tax,0)}</small></span><b>${rub(d.sum)}</b><span class="tag ${d.paidAt?"ok":"warn"}">${d.paidAt?"оплачено":"ждём"}</span></div>`).join("")}</section>`:"";
+  const deals=dealsM.length?`<section class="sec"><h2>Опт за месяц <small>${rub(dealsM.reduce((a,d)=>a+d.sum,0))}</small></h2>${dealsM.map(d=>`<div class="opline"><span>${esc(d.buyer)}<small>${esc(d.name)} × ${n1(d.q)} по ${rub(d.price)} · налог ${pct(d.tax,0)} · прибыль ${rub(dealProfit(d))}</small></span><b>${rub(d.sum)}</b><span class="tag ${d.paidAt?"ok":"warn"}">${d.paidAt?"оплачено":"ждём"}</span></div>`).join("")}</section>`:"";
   const opsL=mc.ops.slice().sort((a,b)=>b.t-a.t);
   const ops=opsL.length?`<section class="sec"><h2>Операции</h2>${opsL.map(x=>`<div class="opline"><span>${esc(x.cat)}<small>${new Date(x.t).toLocaleDateString("ru-RU")}${x.note?" · "+esc(x.note):""}</small></span><b class="${x.type==="in"?"plus":"minus"}">${x.type==="in"?"+":"−"}${rub(x.amount)}</b><button type="button" class="xs" data-delop="${x.id}" aria-label="Удалить">×</button></div>`).join("")}</section>`:"";
-  return pbH+chips+kp+debts+cats+deals+ops;
+  return pbH+buyersCardHtml()+chips+kp+debts+cats+deals+ops;
 }
 function openOpForm(preset){
   const p=Object.assign({type:"out",cat:"Прочее"},preset||{});
@@ -1187,6 +1196,71 @@ function openOpForm(preset){
       cashMonth=mk(t);save();closeSheet();renderMain();toast("Добавлено")};
   });
 }
+
+/* ================= покупатели (опт) ================= */
+function buyerByName(n){n=String(n||"").trim().toLowerCase();return n?S.buyers.find(b=>b.name.toLowerCase()===n)||null:null}
+function baseOpt(p){if(p.opt>0)return {v:p.opt,src:"базовая оптовая цена"};const r=calc(p);if(r.w){return {v:wholesale(r.c.total,r.w.G,p.wb.comm,r.w.L,0.07).opt,src:"расчётная оптовая цена"}}return null}
+function buyerPrice(b,p){
+  if(b.prices&&b.prices[p.id]>0)return {price:b.prices[p.id],src:"цена из прайса покупателя"};
+  const base=baseOpt(p);if(!base)return null;
+  if(b.disc>0)return {price:Math.round(base.v*(1-b.disc)),src:`${base.src} ${rub(base.v)} − скидка ${pct(b.disc,1)}`};
+  return {price:base.v,src:base.src};
+}
+function dealProfit(d){const c=d.cost!=null?d.cost:(find("products",d.pid)?cost(find("products",d.pid)).total*d.q:0);return d.sum-c-d.sum*(d.tax||0)}
+function buyerStats(b,m){
+  const ds=S.deals.filter(d=>(d.bid===b.id||(!d.bid&&d.buyer===b.name))&&(!m||mk(d.t)===m));
+  return {n:ds.length,q:ds.reduce((a,d)=>a+d.q,0),sum:ds.reduce((a,d)=>a+d.sum,0),profit:ds.reduce((a,d)=>a+dealProfit(d),0),debt:ds.filter(d=>!d.paidAt).reduce((a,d)=>a+d.sum,0),unpaid:ds.filter(d=>!d.paidAt),ds,last:ds.length?Math.max(...ds.map(d=>d.t)):null};
+}
+const TAX_TXT={"0.06":"6%","0.04":"4%","0":"без налога"};
+function buyersCardHtml(){
+  const debt=S.deals.filter(d=>!d.paidAt).reduce((a,d)=>a+d.sum,0);
+  return `<button type="button" class="wbbar" data-act="buyers" style="width:100%;text-align:left;cursor:pointer"><div><b>Покупатели</b><small>${S.buyers.length?`${S.buyers.length} в справочнике`:"справочник оптовых покупателей и их цены"}${debt?` · должны ${rub(debt)}`:""}</small></div><span class="btn small">Открыть ›</span></button>`;
+}
+function openBuyers(){
+  const cm=curM();
+  const list=S.buyers.map(b=>({b,a:buyerStats(b),mm:buyerStats(b,cm)})).sort((x,y)=>(y.a.last||0)-(x.a.last||0));
+  openSheet(`<h2>Покупатели</h2><p class="sub">Оптовые покупатели: прайс, налог, долги и сколько каждый принёс.</p>
+   ${list.length?`<div class="subjlist">${list.map(({b,a,mm})=>`<button type="button" data-buyer="${b.id}"><span><b>${esc(b.name)}</b><small>налог ${TAX_TXT[String(b.tax)]||"—"}${b.disc>0?" · скидка "+pct(b.disc,1):""} · всего ${rub(a.sum)}${mm.sum?" · в этом мес. "+rub(mm.sum):""}</small></span>${a.debt?`<span class="tag warn">долг ${rub(a.debt)}</span>`:`<span class="tag mute">${a.n} сд.</span>`}</button>`).join("")}</div>`:`<p class="hint">Пока никого нет. Покупатель появится сам при первой оптовой отгрузке, или добавьте его сейчас.</p>`}
+   <div class="row2"><button type="button" class="btn main" id="b_new">+ Новый покупатель</button><button type="button" class="btn" id="b_close">Закрыть</button></div>`,s=>{
+    s.querySelector("#b_close").onclick=closeSheet;
+    s.querySelector("#b_new").onclick=()=>openBuyer(null);
+    s.querySelectorAll("[data-buyer]").forEach(x=>x.onclick=()=>openBuyer(x.dataset.buyer));
+  });
+}
+function openBuyer(bid){
+  const isNew=!bid,src=bid?S.buyers.find(b=>b.id===bid):null;
+  const b=src?JSON.parse(JSON.stringify(src)):{id:uid(),name:"",tax:0.06,phone:"",note:"",disc:0,prices:{}};
+  const cm=curM(),a=src?buyerStats(src):null,mm=src?buyerStats(src,cm):null;
+  const prods=S.products.slice().sort((x,y)=>{const ix=b.prices[x.id]>0?0:1,iy=b.prices[y.id]>0?0:1;return ix-iy||x.name.localeCompare(y.name,"ru")});
+  const stats=a?`<div class="kpis"><div class="kpi"><span>Куплено всего</span><b>${rub(a.sum)}</b><small>${n1(a.q,0)} шт · сделок: ${a.n}</small></div><div class="kpi"><span>Прибыль</span><b class="${a.profit<0?"neg":""}">${rub(a.profit)}</b><small>после себестоимости и налога</small></div><div class="kpi"><span>${mLabel(cm)}</span><b>${rub(mm.sum)}</b><small>прибыль ${rub(mm.profit)}</small></div></div>`:"";
+  const debt=a&&a.unpaid.length?`<div class="box"><h3>Должен ${rub(a.debt)}</h3>${a.unpaid.sort((x,y)=>x.t-y.t).map(d=>`<div class="opline"><span>${esc(d.name)} × ${n1(d.q)}<small>${new Date(d.t).toLocaleDateString("ru-RU")} · ${Math.floor((Date.now()-d.t)/86400000)} дн. назад</small></span><b>${rub(d.sum)}</b><button type="button" class="btn small main" data-bpay="${d.id}">Оплачено</button></div>`).join("")}</div>`:"";
+  const hist=a&&a.ds.length?`<details><summary class="hint">История сделок (${a.ds.length})</summary><div style="margin-top:6px">${a.ds.slice().sort((x,y)=>y.t-x.t).slice(0,50).map(d=>`<div class="opline"><span>${esc(d.name)} × ${n1(d.q)} по ${rub(d.price)}<small>${new Date(d.t).toLocaleDateString("ru-RU")} · прибыль ${rub(dealProfit(d))}</small></span><b>${rub(d.sum)}</b><span class="tag ${d.paidAt?"ok":"warn"}">${d.paidAt?"опл.":"ждём"}</span></div>`).join("")}</div></details>`:"";
+  openSheet(`<h2>${isNew?"Новый покупатель":esc(b.name)}</h2>${stats}${debt}
+   <div class="grid2"><label class="field"><span>Название / имя</span><input id="bu_name" class="inp" value="${esc(b.name)}" placeholder="ИП Петров" ${isNew?"autofocus":""}></label>
+   <label class="field"><span>Налог по умолчанию</span><select id="bu_tax" class="inp"><option value="0.06" ${b.tax===0.06?"selected":""}>6% — ИП, организация</option><option value="0.04" ${b.tax===0.04?"selected":""}>4% — частное лицо</option><option value="0" ${!b.tax?"selected":""}>Без налога</option></select></label>
+   <label class="field"><span>Телефон / контакт</span><input id="bu_phone" class="inp" value="${esc(b.phone)}" inputmode="tel"></label>
+   <label class="field"><span>Скидка от базовой цены</span><div class="suf"><input id="bu_disc" class="inp" type="text" inputmode="decimal" value="${b.disc>0?pin(b.disc):""}" placeholder="0"><i>%</i></div><small>для изделий без своей цены</small></label></div>
+   <label class="field"><span>Заметка</span><input id="bu_note" class="inp" value="${esc(b.note)}" placeholder="Например: оплата по факту, забирает сам"></label>
+   <div class="box"><h3>Прайс покупателя, ₽ за шт</h3><p class="hint">Пустое поле — цена считается от базовой оптовой со скидкой покупателя.</p>
+    ${prods.map(p=>{const bp=buyerPrice({...b,prices:{}},p);return `<div class="ln" style="align-items:center"><span>${esc(p.name)}<br><small>${bp?"без своей цены: "+rub(bp.price):"нет базовой цены"}</small></span><span><input class="inp" style="width:96px;text-align:right" type="text" inputmode="decimal" data-bprice="${p.id}" value="${b.prices[p.id]>0?dec(b.prices[p.id]):""}" placeholder="${bp?bp.price:""}"></span></div>`}).join("")}</div>
+   ${hist}
+   <div class="row2" id="bu_tail"><button type="button" class="btn main" id="bu_ok">${isNew?"Добавить":"Сохранить"}</button><button type="button" class="btn" id="bu_back">Назад</button>${isNew?"":`<button type="button" class="btn danger" id="bu_del">Удалить</button>`}</div>`,s=>{
+    s.querySelector("#bu_back").onclick=openBuyers;
+    s.querySelectorAll("[data-bpay]").forEach(x=>x.onclick=()=>{payDeal(x.dataset.bpay);openBuyer(bid)});
+    s.querySelector("#bu_ok").onclick=()=>{
+      const name=s.querySelector("#bu_name").value.trim();if(!name){toast("Укажите название");return}
+      const dup=buyerByName(name);if(dup&&dup.id!==b.id){toast("Такой покупатель уже есть");return}
+      const dv=num(s.querySelector("#bu_disc").value);
+      const prices={};s.querySelectorAll("[data-bprice]").forEach(i=>{const v=num(i.value);if(v>0)prices[i.dataset.bprice]=v});
+      const nb={...b,name,tax:+s.querySelector("#bu_tax").value,phone:s.querySelector("#bu_phone").value.trim(),note:s.querySelector("#bu_note").value.trim(),disc:dv>0?dv/100:0,prices};
+      if(src){if(src.name!==name)S.deals.forEach(d=>{if(d.bid===src.id||(!d.bid&&d.buyer===src.name)){d.buyer=name;d.bid=src.id}});Object.assign(src,nb)}else S.buyers.push(nb);
+      save();toast("Сохранено");openBuyers();if(view==="plan")renderMain();
+    };
+    const del=s.querySelector("#bu_del");if(del)del.onclick=()=>{const t=s.querySelector("#bu_tail");t.innerHTML=`<p class="hint" style="flex-basis:100%">Удалить «${esc(b.name)}» из справочника? Сделки и оплаты останутся в кассе.</p><button type="button" class="btn danger solid" id="bu_yes">Удалить</button><button type="button" class="btn" id="bu_no">Отмена</button>`;
+      t.querySelector("#bu_no").onclick=()=>openBuyer(bid);t.querySelector("#bu_yes").onclick=()=>{S.buyers=S.buyers.filter(x=>x.id!==b.id);save();openBuyers();if(view==="plan")renderMain();toast("Удалено")}};
+  });
+}
+function payDeal(id){const d=S.deals.find(x=>x.id===id);if(!d||d.paidAt)return;d.paidAt=Date.now();S.money.push({id:uid(),t:Date.now(),type:"in",cat:"Опт",amount:d.sum,note:`${d.buyer}: ${d.name} × ${n1(d.q)}`,ref:d.id});save();toast("Оплата записана в кассу")}
 
 /* ================= налоги НПД ================= */
 const NPD_LIMIT=2400000;
@@ -1373,7 +1447,7 @@ $("#main").addEventListener("click",e=>{
   const md=e.target.closest("[data-mode]");if(md){S.ui.mode=md.dataset.mode;save();applyTheme();renderMain();return}
   const st=e.target.closest("[data-stab]");if(st){salesTab=st.dataset.stab;renderMain();return}
   const cmo=e.target.closest("[data-cmonth]");if(cmo){cashMonth=cmo.dataset.cmonth;renderMain();return}
-  const pdl=e.target.closest("[data-paydeal]");if(pdl){const d=S.deals.find(x=>x.id===pdl.dataset.paydeal);if(d){d.paidAt=Date.now();S.money.push({id:uid(),t:Date.now(),type:"in",cat:"Опт",amount:d.sum,note:`${d.buyer}: ${d.name} × ${n1(d.q)}`,ref:d.id});save();renderMain();toast("Оплата записана в кассу")}return}
+  const pdl=e.target.closest("[data-paydeal]");if(pdl){payDeal(pdl.dataset.paydeal);renderMain();return}
   const dop=e.target.closest("[data-delop]");if(dop){const x=S.money.find(o=>o.id===dop.dataset.delop);if(x)confirmSheet("Удалить операцию?",`${esc(x.cat)}: ${rub(x.amount)}${x.note?" · "+esc(x.note):""}`,"Удалить",()=>{S.money=S.money.filter(o=>o.id!==x.id);if(x.ref&&String(x.ref).startsWith("tax:")){delete S.tax.paid[String(x.ref).slice(4)]}const d=S.deals.find(dd=>dd.id===x.ref);if(d)d.paidAt=null;save();renderMain();toast("Удалено")});return}
   const tpy=e.target.closest("[data-taxpay]");if(tpy){openTaxPay(tpy.dataset.taxpay);return}
   const mo=e.target.closest("[data-month]");if(mo){salesMonth=mo.dataset.month;renderMain();return}
@@ -1390,6 +1464,7 @@ $("#main").addEventListener("click",e=>{
   if(act==="syncOff")confirmSheet("Выключить синхронизацию?","Данные в Google останутся, но новые изменения туда сохраняться не будут.","Выключить",()=>{SY.on=false;saveSync();topBar();renderMain();toast("Синхронизация выключена")});
   if(act==="salesFetch")salesFetch(a);
   if(act==="opAdd")openOpForm();
+  if(act==="buyers")openBuyers();
   if(act==="opWB")openOpForm({type:"in",cat:"Выплата WB"});
   if(act==="goTax"){view="plan";salesTab="tax";render()}
   if(act==="pbAdd"){const pr=num($("#pb_price").value);if(!(pr>0)){toast("Укажите цену принтера");return}const dv=$("#pb_date").value;S.money.push({id:uid(),t:dv?new Date(dv+"T12:00:00").getTime():Date.now(),type:"out",cat:"Оборудование",amount:pr,note:$("#pb_name").value.trim()||"Принтер"});save();renderMain();toast("Добавлено")}
@@ -1422,7 +1497,7 @@ $("#main").addEventListener("input",e=>{
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
 applyTheme();
-window.__m={payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
+window.__m={buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
 document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
