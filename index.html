@@ -3,6 +3,7 @@
 <meta name="theme-color" content="#0d7566">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon2-192.png"><link rel="apple-touch-icon" href="icon2-192.png">
+<script>try{var _i=JSON.parse(localStorage.getItem('master3d_icon')||'null');if(_i&&_i.d&&_i.c&&!(_i.d==='nozzle'&&_i.c==='teal')){document.querySelector('link[rel=manifest]').href='icons/m-'+_i.d+'-'+_i.c+'.webmanifest';document.querySelector('link[rel=icon]').href='icons/'+_i.d+'-'+_i.c+'-192.png';}}catch(e){}</script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Мастерская 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,9 +49,27 @@
 :root[data-accent="graphite"]{--accent:#3d4a57;--accent-fg:#ffffff;--accent-soft:#dde2e8;--c1:#3d4a57}
 @media (prefers-color-scheme: dark){:root[data-accent="graphite"]:not([data-theme="light"]){--accent:#b0bccb;--accent-fg:#141a21;--accent-soft:#262d36;--c1:#b0bccb}}
 :root[data-theme="dark"][data-accent="graphite"]{--accent:#b0bccb;--accent-fg:#141a21;--accent-soft:#262d36;--c1:#b0bccb}
+:root[data-accent="sea"]{--accent:#0a7a8f;--accent-fg:#ffffff;--accent-soft:#d3ecf0;--c1:#0a7a8f}
+@media (prefers-color-scheme: dark){:root[data-accent="sea"]:not([data-theme="light"]){--accent:#5ec8d8;--accent-fg:#04262c;--accent-soft:#123a40;--c1:#5ec8d8}}
+:root[data-theme="dark"][data-accent="sea"]{--accent:#5ec8d8;--accent-fg:#04262c;--accent-soft:#123a40;--c1:#5ec8d8}
+:root[data-accent="forest"]{--accent:#3b6b26;--accent-fg:#ffffff;--accent-soft:#dfecd6;--c1:#3b6b26}
+@media (prefers-color-scheme: dark){:root[data-accent="forest"]:not([data-theme="light"]){--accent:#93cf72;--accent-fg:#13240a;--accent-soft:#22361a;--c1:#93cf72}}
+:root[data-theme="dark"][data-accent="forest"]{--accent:#93cf72;--accent-fg:#13240a;--accent-soft:#22361a;--c1:#93cf72}
+:root[data-accent="terracotta"]{--accent:#a1442a;--accent-fg:#ffffff;--accent-soft:#f5ded6;--c1:#a1442a}
+@media (prefers-color-scheme: dark){:root[data-accent="terracotta"]:not([data-theme="light"]){--accent:#ec9a7d;--accent-fg:#2f120a;--accent-soft:#3f2219;--c1:#ec9a7d}}
+:root[data-theme="dark"][data-accent="terracotta"]{--accent:#ec9a7d;--accent-fg:#2f120a;--accent-soft:#3f2219;--c1:#ec9a7d}
+:root[data-accent="mustard"]{--accent:#8a6a00;--accent-fg:#ffffff;--accent-soft:#f3e7c2;--c1:#8a6a00}
+@media (prefers-color-scheme: dark){:root[data-accent="mustard"]:not([data-theme="light"]){--accent:#e2c04f;--accent-fg:#2a2000;--accent-soft:#3a3214;--c1:#e2c04f}}
+:root[data-theme="dark"][data-accent="mustard"]{--accent:#e2c04f;--accent-fg:#2a2000;--accent-soft:#3a3214;--c1:#e2c04f}
+:root[data-accent="fuchsia"]{--accent:#a1287f;--accent-fg:#ffffff;--accent-soft:#f4dcee;--c1:#a1287f}
+@media (prefers-color-scheme: dark){:root[data-accent="fuchsia"]:not([data-theme="light"]){--accent:#ec86cf;--accent-fg:#300c25;--accent-soft:#3d1934;--c1:#ec86cf}}
+:root[data-theme="dark"][data-accent="fuchsia"]{--accent:#ec86cf;--accent-fg:#300c25;--accent-soft:#3d1934;--c1:#ec86cf}
 .swatches{display:flex;gap:10px;flex-wrap:wrap}
 .swatch{width:44px;height:44px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;color:#fff;font-weight:700}
 .swatch.on{box-shadow:0 0 0 3px var(--fg)}
+.iconpick{padding:0;border:0;background:none;border-radius:16px;overflow:hidden;width:56px;height:56px;box-shadow:0 0 0 1px var(--line)}
+.iconpick.on{box-shadow:0 0 0 3px var(--fg)}
+.iconpick img{display:block;width:56px;height:56px}
 .seg.four{grid-template-columns:repeat(4,1fr)}
 .seg.three{grid-template-columns:repeat(3,1fr)}
 .seg.four button{padding:9px 4px;font-size:13px}
@@ -285,7 +304,7 @@ function valid(d){return d&&d.v===2&&Array.isArray(d.products)&&Array.isArray(d.
 function normName(s){return String(s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
 function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true},o||{})}
 const WBCFG_DEF={url:"",wh:"",model:"fbs",last:""};
-const UI_DEF={accent:"teal",mode:"auto"};
+const UI_DEF={accent:"teal",mode:"auto",icon:"nozzle",iconColor:"auto"};
 function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(!Array.isArray(d.buyers)){d.buyers=[];
   d.deals.slice().sort((a,b)=>a.t-b.t).forEach(x=>{if(!x.buyer)return;let b=d.buyers.find(y=>y.name.toLowerCase()===String(x.buyer).toLowerCase());
     if(!b){b={id:uid(),name:x.buyer,tax:x.tax,phone:"",note:"",disc:0,prices:{}};d.buyers.push(b)}b.tax=x.tax;b.prices[x.pid]=x.price;x.bid=b.id})}
@@ -397,8 +416,10 @@ function undo(id){
   const back=[];for(const ch of e.changes){const it=find(ch.c,ch.id);if(it){it.qty=r1(it.qty-ch.d);back.push({...ch,d:-ch.d})}}
   e.undone=true;S.log.unshift({id:uid(),t:Date.now(),text:"Отмена: "+e.text,changes:back,isUndo:true});
   let extra="";
-  if(e.dealId){S.deals=S.deals.filter(d=>d.id!==e.dealId);S.money=S.money.filter(m=>m.ref!==e.dealId);extra=", оптовая сделка удалена"}
+  if(e.dealId){S.deals=S.deals.filter(d=>d.id!==e.dealId);S.money=S.money.filter(m=>m.ref!==e.dealId);extra=", оптовая сделка удалена";
+    if(e.newBuyer&&!S.deals.some(d=>d.bid===e.newBuyer)){const bb=S.buyers.find(x=>x.id===e.newBuyer);if(bb&&!bb.phone&&!bb.note)S.buyers=S.buyers.filter(x=>x.id!==e.newBuyer)}}
   if(e.moneyId){S.money=S.money.filter(m=>m.id!==e.moneyId);extra=", расход в кассе удалён"}
+  if(e.prevPrice!=null&&e.changes[0]){const m=find(e.changes[0].c,e.changes[0].id);if(m){if(e.changes[0].c==="plastics")m.pk=e.prevPrice;else m.price=e.prevPrice;extra+=", цена вернулась к прежней"}}
   save();render();toast("Операция отменена, остатки вернулись"+extra);
 }
 
@@ -617,15 +638,16 @@ function openAction(c,id,op,after){
       const ch=build();if(!ch){inp.focus();toast("Введите количество больше нуля");return}
       const n=num(inp.value),np=newPrice(),ov=optVals();
       if(ov){if(!ov.buyer){toast("Укажите покупателя");s.querySelector("#a_buyer").focus();return}if(!(ov.price>0)){toast("Укажите цену за штуку");s.querySelector("#a_price").focus();return}}
+      const prevPrice=np?(c==="plastics"?(it.pk>0?it.pk:S.p.ppk):(it.price||0)):null;
       if(np){if(c==="plastics")it.pk=Math.round(np.avg*100)/100;else it.price=Math.round(np.avg*100)/100}
       const text=ov?`Опт: ${it.name} × ${n1(n)} → ${ov.buyer}`:{print:`Напечатано: ${it.name} × ${n1(n)}`,ship:`Отгружено: ${it.name} × ${n1(n)}`,in:`Приход: ${it.name}`,out:`Расход: ${it.name}`,set:`Пересчёт: ${it.name}`}[op];
       const note=[s.querySelector("#a_note").value.trim(),np?`оплачено ${rub(num(paid.value))}`:"",ov?`${rub(ov.price)}/шт, налог ${pct(ov.tax,0)}${ov.paidNow?"":", ждём оплату"}`:""].filter(Boolean).join(" · ");
       const ok=commit(text,ch,note);if(!ok&&np)save();
-      if(ok&&ov){let bo=buyerByName(ov.buyer);if(!bo){bo={id:uid(),name:ov.buyer,tax:ov.tax,phone:"",note:"",disc:0,prices:{}};S.buyers.push(bo)}
+      if(ok&&ov){let bo=buyerByName(ov.buyer);let newB=false;if(!bo){bo={id:uid(),name:ov.buyer,tax:ov.tax,phone:"",note:"",disc:0,prices:{}};S.buyers.push(bo);newB=true}
         if(s.querySelector("#a_remember").checked)bo.prices[id]=ov.price;
-        const d={id:uid(),t:ok.t,buyer:bo.name,bid:bo.id,pid:id,name:it.name,q:n,price:ov.price,sum:Math.round(ov.price*n*100)/100,cost:Math.round(cost(it).total*n*100)/100,tax:ov.tax,paidAt:ov.paidNow?ok.t:null};S.deals.push(d);ok.dealId=d.id;
+        const d={id:uid(),t:ok.t,buyer:bo.name,bid:bo.id,pid:id,name:it.name,q:n,price:ov.price,sum:Math.round(ov.price*n*100)/100,cost:Math.round(cost(it).total*n*100)/100,tax:ov.tax,paidAt:ov.paidNow?ok.t:null};S.deals.push(d);ok.dealId=d.id;if(newB)ok.newBuyer=bo.id;
         if(ov.paidNow)S.money.push({id:uid(),t:ok.t,type:"in",cat:"Опт",amount:d.sum,note:`${ov.buyer}: ${it.name} × ${n1(n)}`,ref:d.id});save()}
-      if(ok&&np){const m={id:uid(),t:ok.t,type:"out",cat:c==="plastics"?"Пластик":"Детали и упаковка",amount:num(paid.value),note:`${it.name}, ${n1(n)} ${u}`,ref:ok.id};S.money.push(m);ok.moneyId=m.id;save()}
+      if(ok&&np){const m={id:uid(),t:ok.t,type:"out",cat:c==="plastics"?"Пластик":"Детали и упаковка",amount:num(paid.value),note:`${it.name}, ${n1(n)} ${u}`,ref:ok.id};S.money.push(m);ok.moneyId=m.id;ok.prevPrice=prevPrice;save()}
       closeSheet();
       if(after)after();else render();
       toast(ok?"Записано":"Остаток не изменился");
@@ -719,7 +741,7 @@ function renderProd(){
   m.querySelectorAll("[data-ex]").forEach(bt=>bt.onclick=()=>{readForm();const [n,v]=bt.dataset.ex.split("|");draft.ex.push({n,v:+v});drawEx();markDirty();update()});
   $("#e_save").onclick=()=>saveDraft(true);
   if(editId){
-    $("#e_dup").onclick=()=>{readForm();const c=cleanItem(draft);c.id=uid();c.name=(c.name||"Изделие")+" (копия)";c.qty=0;c.plan=0;S.products.push(c);save();openProd(c.id);toast("Копия создана. Поменяйте название и пластик")};
+    $("#e_dup").onclick=()=>{readForm();const c=cleanItem(draft);c.id=uid();c.name=(c.name||"Изделие")+" (копия)";c.qty=0;c.plan=0;c.sku="";S.products.push(c);save();openProd(c.id);toast("Копия создана. Поменяйте название и пластик")};
     $("#e_del").onclick=()=>confirmSheet(`Удалить «${esc(draft.name)}»?`,"Изделие пропадёт со склада и из расчётов. Журнал операций останется.","Удалить",()=>{S.products=S.products.filter(x=>x.id!==editId);save();dirty=false;view="products";render();toast("Удалено")});
   }
   update();
@@ -946,18 +968,31 @@ function logHtml(){
 }
 
 /* ================= оформление ================= */
-const ACCENTS=[["teal","Изумруд","#0d7566"],["blue","Синий","#2c56b0"],["violet","Фиолетовый","#6a46b5"],["orange","Оранжевый","#b5560f"],["berry","Ягодный","#b0304f"],["graphite","Графит","#3d4a57"]];
+const ACCENTS=[["teal","Изумруд","#0d7566"],["blue","Синий","#2c56b0"],["violet","Фиолетовый","#6a46b5"],["orange","Оранжевый","#b5560f"],["berry","Ягодный","#b0304f"],["graphite","Графит","#3d4a57"],["sea","Морская волна","#0a7a8f"],["forest","Лесной","#3b6b26"],["terracotta","Терракота","#a1442a"],["mustard","Горчица","#8a6a00"],["fuchsia","Фуксия","#a1287f"]];
+const ICON_D=[["nozzle","Сопло и слои"],["spool","Катушка"],["box","Коробка"],["mono","Буква М"]];
+function iconColor(){const u=S.ui||UI_DEF;return !u.iconColor||u.iconColor==="auto"?(u.accent||"teal"):u.iconColor}
+function applyIcon(){
+  const d=(S.ui&&S.ui.icon)||"nozzle",c=iconColor(),def=d==="nozzle"&&c==="teal";
+  try{localStorage.setItem("master3d_icon",JSON.stringify({d,c}))}catch(e){}
+  const m=document.querySelector('link[rel="manifest"]');if(m)m.setAttribute("href",def?"manifest.webmanifest":`icons/m-${d}-${c}.webmanifest`);
+  const f=document.querySelector('link[rel="icon"]');if(f)f.setAttribute("href",def?"icon2-192.png":`icons/${d}-${c}-192.png`);
+}
 function applyTheme(){
   const r=document.documentElement,u=S.ui||UI_DEF;
   if(u.accent&&u.accent!=="teal")r.dataset.accent=u.accent;else delete r.dataset.accent;
   if(u.mode==="light"||u.mode==="dark")r.dataset.theme=u.mode;else if(r.dataset.theme&&r.dataset.ownTheme)delete r.dataset.theme;
   if(u.mode==="light"||u.mode==="dark")r.dataset.ownTheme="1";else delete r.dataset.ownTheme;
   const a=ACCENTS.find(x=>x[0]===u.accent)||ACCENTS[0];const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",a[2]);
+  applyIcon();
 }
 function themeCardHtml(){
   const u=S.ui;
   return `<div class="card"><h2>Оформление</h2><p>Цвет кнопок и акцентов</p>
    <div class="swatches">${ACCENTS.map(([k,l,c])=>`<button type="button" class="swatch ${u.accent===k?"on":""}" style="background:${c}" data-accent="${k}" aria-label="${l}" title="${l}">${u.accent===k?"✓":""}</button>`).join("")}</div>
+   <p>Ярлык на экране телефона</p>
+   <div class="swatches">${ICON_D.map(([k,l])=>`<button type="button" class="iconpick ${(u.icon||"nozzle")===k?"on":""}" data-icon="${k}" title="${l}" aria-label="${l}"><img src="icons/${k}-${iconColor()}-192.png" alt="" width="56" height="56"></button>`).join("")}</div>
+   <label class="field"><span>Цвет ярлыка</span><select id="ui_iconcolor" class="inp"><option value="auto" ${!u.iconColor||u.iconColor==="auto"?"selected":""}>Как оформление</option>${ACCENTS.map(([k,l])=>`<option value="${k}" ${u.iconColor===k?"selected":""}>${l}</option>`).join("")}</select></label>
+   <p class="hint">Новый ярлык появится на экране, когда Chrome обновит приложение. Обычно это происходит в течение суток, если открывать приложение с интернетом. Не появился за 3 дня — удалите ярлык и установите заново из Chrome (⋮ → «Установить приложение»). Данные при этом сохранятся.</p>
    <p>Тема</p><div class="seg three">${[["auto","Как в телефоне"],["light","Светлая"],["dark","Тёмная"]].map(([k,l])=>`<button type="button" data-mode="${k}" class="${u.mode===k?"on":""}">${l}</button>`).join("")}</div></div>`;
 }
 
@@ -1414,7 +1449,7 @@ function csv(sep){
 let pend={sk:null,ce:null};
 function handleImport(text){
   let d;try{d=JSON.parse(text)}catch(e){toast("Это не файл копии");return}
-  if(valid(d)){confirmSheet("Загрузить копию?",`В копии ${d.products.length} изделий, ${d.plastics.length} пластиков, ${d.parts.length} деталей. Текущие данные заменятся.`,"Заменить",()=>{S=normalize(d);save();view="products";render();toast("Копия загружена")});return}
+  if(valid(d)){confirmSheet("Загрузить копию?",`В копии ${d.products.length} изделий, ${d.plastics.length} пластиков, ${d.parts.length} деталей. Текущие данные заменятся.`,"Заменить",()=>{S=normalize(d);save();applyTheme();view="products";render();toast("Копия загружена")});return}
   if(d&&Array.isArray(d.items))pend.ce=d;
   else if(d&&Array.isArray(d.products)&&Array.isArray(d.plastics))pend.sk=d;
   else{toast("В файле нет данных мастерской");return}
@@ -1444,6 +1479,7 @@ $("#main").addEventListener("click",e=>{
   const u=e.target.closest("[data-undo]");if(u){undo(u.dataset.undo);return}
   const so=e.target.closest("[data-sort]");if(so){prodSort=so.dataset.sort;onlyLow=false;renderMain();return}
   const ac=e.target.closest("[data-accent]");if(ac&&ac.classList.contains("swatch")){S.ui.accent=ac.dataset.accent;save();applyTheme();renderMain();return}
+  const icp=e.target.closest("[data-icon]");if(icp){S.ui.icon=icp.dataset.icon;save();applyIcon();renderMain();toast("Ярлык выбран");return}
   const md=e.target.closest("[data-mode]");if(md){S.ui.mode=md.dataset.mode;save();applyTheme();renderMain();return}
   const st=e.target.closest("[data-stab]");if(st){salesTab=st.dataset.stab;renderMain();return}
   const cmo=e.target.closest("[data-cmonth]");if(cmo){cashMonth=cmo.dataset.cmonth;renderMain();return}
@@ -1481,10 +1517,11 @@ $("#main").addEventListener("click",e=>{
   if(act==="pasteImport"){const t=$("#pasteIn").value.trim();t?handleImport(t):toast("Сначала вставьте текст копии")}
   if(act==="doMigrate")confirmSheet("Перенести данные?","Текущие данные приложения заменятся данными из старых копий.","Перенести",()=>{S=normalize(migrate(pend.sk,pend.ce));pend={sk:null,ce:null};save();view="products";render();toast("Данные перенесены")},false);
   if(act==="resetP")confirmSheet("Вернуть параметры?","Все параметры станут как в вашей таблице.","Вернуть",()=>{S.p={...DEF};save();renderMain();toast("Параметры восстановлены")});
-  if(act==="wipe")confirmSheet("Очистить всё?","Удалятся изделия, материалы и журнал. Вернуть можно только из копии.","Очистить",()=>{S=normalize({v:2,p:S.p,wbcfg:S.wbcfg,products:[],plastics:[],parts:[],log:[]});S.wbSnap=null;save();view="products";render();toast("Очищено")});
+  if(act==="wipe")confirmSheet("Очистить всё?","Удалятся изделия, материалы и журнал. Вернуть можно только из копии.","Очистить",()=>{S=normalize({v:2,p:S.p,wbcfg:S.wbcfg,ui:S.ui,products:[],plastics:[],parts:[],log:[]});S.wbSnap=null;save();view="products";render();toast("Очищено")});
 });
 $("#main").addEventListener("change",e=>{
   if(e.target.id==="wb_url"){const nu=e.target.value.trim();if(nu!==S.wbcfg.url){S.wbcfg.url=nu;save();renderMain()}}
+  if(e.target.id==="ui_iconcolor"){S.ui.iconColor=e.target.value;save();applyIcon();renderMain();toast("Цвет ярлыка выбран")}
   if(e.target.id==="tax_bonus"){const v=num(e.target.value);S.tax.bonus=isFinite(v)&&v>=0?v:null;save();renderMain();toast("Остаток вычета сохранён")}
   if(e.target.id==="wb_wh"){S.wbcfg.wh=e.target.value;save();toast("Склад выбран. Тариф запомнится при следующем обновлении")}
   if(e.target.id==="wb_model"){S.wbcfg.model=e.target.value;save();renderMain();toast("Схема изменена")}
