@@ -1140,9 +1140,11 @@ async function salesFetch(btn){
 }
 async function payoutsFetch(){
   try{const d=await gGet({action:"payouts",key:SY.key});if(!d||!d.ok||!Array.isArray(d.rows))return 0;
-    let n=0;for(const r of d.rows){const ref="wbrep:"+r.id,t=new Date(String(r.to).slice(0,10)+"T12:00:00").getTime(),neg=r.total<0;
-      const e={type:neg?"out":"in",cat:neg?"Удержание WB":"Выплата WB",amount:Math.abs(Math.round(r.total*100)/100),t,note:`Отчёт № ${r.id}, ${new Date(String(r.from).slice(0,10)).toLocaleDateString("ru-RU")}–${new Date(String(r.to).slice(0,10)).toLocaleDateString("ru-RU")}`,ref};
-      const ex=S.money.find(m=>m.ref===ref);if(ex)Object.assign(ex,e);else{S.money.push({id:uid(),...e});n++}}
+    let n=0;const up=(ref,e)=>{const ex=S.money.find(m=>m.ref===ref);if(ex){if(ex.userCat){ex.amount=e.amount;ex.t=e.t}else Object.assign(ex,e)}else{S.money.push({id:uid(),...e,ref});n++}};
+    for(const r of d.rows){const t=new Date(String(r.to).slice(0,10)+"T12:00:00").getTime(),per=`${new Date(String(r.from).slice(0,10)).toLocaleDateString("ru-RU")}–${new Date(String(r.to).slice(0,10)).toLocaleDateString("ru-RU")}`;
+      const extra=Math.max(0,(r.add||0))+Math.max(0,-(r.ded||0));const big=extra>=3000?Math.round(extra*100)/100:0;const main=Math.round((r.total-big)*100)/100;
+      up("wbrep:"+r.id,{type:main<0?"out":"in",cat:main<0?"Удержание WB":"Выплата WB",amount:Math.abs(main),t,note:`Отчёт № ${r.id}, ${per}`});
+      if(big)up("wbrep:"+r.id+":extra",{type:"in",cat:"Доплата WB (проверьте)",amount:big,t,note:`Отчёт № ${r.id}, ${per}: доплаты и возвраты удержаний`,flag:"Крупная доплата в отчёте WB. Если это деньги, которые вы сами вносили на баланс, смените статью на «Свои деньги (взнос)» — тогда они не будут считаться доходом."})}
     if(d.rows.length)save();return n}catch(e){return 0}
 }
 function matchProd(row){const nm=String(row.nm),art=String(row.art||"").trim().toLowerCase();
@@ -1180,7 +1182,9 @@ function salesTabHtml(){
 }
 
 /* ================= касса и окупаемость ================= */
-const CAT_IN=["Выплата WB","Опт","Прочий приход"],CAT_OUT=["Пластик","Детали и упаковка","Оборудование","Налог","Реклама","Доставка","Возврат покупателю","Удержание WB","Прочее"];
+const OWN="Свои деньги (взнос)",HIST_IN="Опт и заказы (история)";
+const CAT_IN=["Выплата WB","Опт",HIST_IN,"Доплата WB (проверьте)","Прочий приход",OWN],CAT_OUT=["Пластик","Детали и упаковка","Расходники","Оборудование","Разработка моделей","Запуск бизнеса","Налог","Реклама","Доставка","Возврат покупателю","Удержание WB","Прочее"];
+const INVEST=["Оборудование","Разработка моделей","Запуск бизнеса"];
 let cashMonth=null;
 const mk=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
 const curM=()=>mk(Date.now());
@@ -1192,11 +1196,12 @@ function wbEst(m){
 }
 function monthCash(m){
   const ops=S.money.filter(x=>mk(x.t)===m);
-  const inn=ops.filter(x=>x.type==="in").reduce((a,x)=>a+x.amount,0),out=ops.filter(x=>x.type==="out").reduce((a,x)=>a+x.amount,0);
-  const equip=ops.filter(x=>x.type==="out"&&x.cat==="Оборудование").reduce((a,x)=>a+x.amount,0);
+  const own=ops.filter(x=>x.type==="in"&&x.cat===OWN).reduce((a,x)=>a+x.amount,0);
+  const inn=ops.filter(x=>x.type==="in"&&x.cat!==OWN).reduce((a,x)=>a+x.amount,0),out=ops.filter(x=>x.type==="out").reduce((a,x)=>a+x.amount,0);
+  const equip=ops.filter(x=>x.type==="out"&&INVEST.includes(x.cat)).reduce((a,x)=>a+x.amount,0);
   const wbFact=ops.some(x=>x.type==="in"&&x.cat==="Выплата WB");
   const est=wbFact?null:wbEst(m);
-  return {ops,inn,out,equip,est,net:inn+(est||0)-out,opNet:inn+(est||0)-(out-equip)};
+  return {ops,inn,own,out,equip,est,net:inn+(est||0)-out,opNet:inn+(est||0)-(out-equip)};
 }
 function allMonths(){
   const set=new Set([curM()]);S.money.forEach(x=>set.add(mk(x.t)));S.deals.forEach(x=>set.add(mk(x.t)));
@@ -1205,39 +1210,44 @@ function allMonths(){
 }
 function payback(){
   const months=allMonths().slice().reverse();
-  const invest=S.money.filter(x=>x.type==="out"&&x.cat==="Оборудование").reduce((a,x)=>a+x.amount,0);
+  const invest=S.money.filter(x=>x.type==="out"&&INVEST.includes(x.cat)).reduce((a,x)=>a+x.amount,0);
+  const byInv={};S.money.filter(x=>x.type==="out"&&INVEST.includes(x.cat)).forEach(x=>byInv[x.cat]=(byInv[x.cat]||0)+x.amount);
+  const own=S.money.filter(x=>x.type==="in"&&x.cat===OWN).reduce((a,x)=>a+x.amount,0);
   let earned=0,estMonths=0;const per={};
   for(const m of months){const c=monthCash(m);per[m]=c.opNet;earned+=c.opNet;if(c.est)estMonths++}
   const cm=curM(),last=[prevM(cm,1),prevM(cm,2),prevM(cm,3)].filter(m=>per[m]!==undefined&&(S.money.some(x=>mk(x.t)===m)||wbEst(m)!==null));
   const avg=last.length?last.reduce((a,m)=>a+per[m],0)/last.length:null;
-  return {invest,earned,left:Math.max(0,invest-earned),pct:invest?earned/invest:0,avg,avgN:last.length,estMonths};
+  return {invest,byInv,own,earned,left:Math.max(0,invest-earned),pct:invest?earned/invest:0,avg,avgN:last.length,estMonths};
 }
 function cashHtml(){
-  const pb=payback(),eq=S.money.filter(x=>x.cat==="Оборудование");
-  let pbH;
-  if(!eq.length)pbH=`<section class="sec"><h2>Окупаемость принтера</h2><p class="hint">Укажите, сколько стоил принтер. Приложение будет показывать, какая часть уже вернулась и когда он окупится полностью.</p>
+  const pb=payback(),eq=S.money.filter(x=>x.cat==="Оборудование"&&x.type==="out");
+  let pbH="";
+  if(!eq.length)pbH=`<section class="sec"><h2>Окупаемость принтера</h2><p class="hint">Укажите, сколько стоил принтер. Приложение будет показывать, какая часть вложений уже вернулась и когда они окупятся полностью.</p>
     <div class="grid2"><label class="field"><span>Что купили</span><input id="pb_name" class="inp" value="Bambu Lab H2D"></label><label class="field"><span>Цена, ₽</span><input id="pb_price" class="inp" type="text" inputmode="decimal" placeholder="Например: 150000"></label>
     <label class="field"><span>Дата покупки</span><input id="pb_date" class="inp" type="date" value="${new Date().toISOString().slice(0,10)}"></label></div>
     <button type="button" class="btn main" data-act="pbAdd">Добавить</button></section>`;
-  else{
+  if(pb.invest>0){
     const p=Math.max(0,Math.min(1,pb.pct)),done=pb.earned>=pb.invest;
     const fc=done?`<b class="plus">Принтер окупился.</b> Сверх вложений заработано ${rub(pb.earned-pb.invest)}.`:pb.avg===null?"Прогноз появится, когда наберётся хотя бы один полный месяц данных.":pb.avg<=0?`За последние ${pb.avgN} мес. расходы были больше приходов, поэтому при таком темпе принтер не окупится.`:`При среднем темпе ${rub(pb.avg)} в месяц (за последние ${pb.avgN} мес.) он окупится примерно через <b>${n1(Math.ceil(pb.left/pb.avg),0)} мес.</b>`;
-    pbH=`<section class="sec"><h2>Окупаемость <small>${eq.map(x=>esc(x.note||"оборудование")).join(", ")}</small></h2>
+    pbH+=`<section class="sec"><h2>Окупаемость <small>принтер, разработка, запуск</small></h2>
      <div class="bar"><div class="big">${pct(p,0)}</div><span class="tag ${done?"ok":"mid"}">${done?"окупился":"осталось "+rub(pb.left)}</span></div>
      <div class="progress ${done?"ok":""}"><i style="width:${p*100}%"></i></div>
-     <div class="lines"><div class="ln"><span>Вложено в оборудование</span><span>${rub(pb.invest)}</span></div><div class="ln"><span>Заработано (приходы − расходы)</span><span>${rub(pb.earned)}</span></div></div>
-     <p class="hint">${fc}${pb.estMonths?` Для ${pb.estMonths} мес. без внесённых выплат WB использована оценка по продажам.`:""}</p></section>`;
+     <div class="lines"><div class="ln"><span><b>Вложено</b></span><span><b>${rub(pb.invest)}</b></span></div>${Object.entries(pb.byInv).map(([k,v])=>`<div class="ln"><small>${esc(k)}</small><small>${rub(v)}</small></div>`).join("")}
+     <div class="ln"><span><b>Заработано</b> <small>приходы − текущие расходы</small></span><span><b>${rub(pb.earned)}</b></span></div>
+     ${pb.own?`<div class="ln"><small>Свои деньги (взносы) — не считаются доходом</small><small>${rub(pb.own)}</small></div>`:""}</div>
+     <p class="hint">${fc}${pb.estMonths?` Для ${pb.estMonths} мес. без отчётов WB использована оценка по продажам.`:""}</p></section>`;
   }
   const months=allMonths();if(!cashMonth||!months.includes(cashMonth))cashMonth=months[0];
   const chips=`<div class="months">${months.map(m=>`<button type="button" class="chip ${m===cashMonth?"on":""}" data-cmonth="${m}">${mLabel(m)}</button>`).join("")}</div>`;
   const mc=monthCash(cashMonth);
   const byCat=(type)=>{const o={};mc.ops.filter(x=>x.type===type).forEach(x=>o[x.cat]=(o[x.cat]||0)+x.amount);return Object.entries(o).sort((a,b)=>b[1]-a[1])};
-  const kp=`<div class="kpis"><div class="kpi"><span>Пришло</span><b class="plus">${rub(mc.inn+(mc.est||0))}</b><small>${mc.est?"с оценкой WB":"фактически"}</small></div><div class="kpi"><span>Ушло</span><b>${rub(mc.out)}</b><small>${mc.equip?"в т.ч. оборудование "+rub(mc.equip):"расходы"}</small></div><div class="kpi"><span>Итого</span><b class="${mc.net<0?"neg":""}">${rub(mc.net)}</b><small>${mLabel(cashMonth)}</small></div></div>`;
+  const kp=`<div class="kpis"><div class="kpi"><span>Пришло</span><b class="plus">${rub(mc.inn+(mc.est||0))}</b><small>${mc.own?"без своих денег "+rub(mc.own):mc.est?"с оценкой WB":"фактически"}</small></div><div class="kpi"><span>Ушло</span><b>${rub(mc.out)}</b><small>${mc.equip?"в т.ч. вложения "+rub(mc.equip):"расходы"}</small></div><div class="kpi"><span>Итого</span><b class="${mc.net<0?"neg":""}">${rub(mc.net)}</b><small>${mLabel(cashMonth)}</small></div></div>`;
   const cats=`<section class="sec"><h2>По статьям</h2><div class="lines">
     ${byCat("in").map(([k,v])=>`<div class="ln"><span>${esc(k)}</span><span class="plus">+${rub(v)}</span></div>`).join("")}
     ${mc.est!==null?`<div class="ln"><span>Выплаты WB ≈ <small>оценка: к перечислению − логистика</small></span><span class="plus">+${rub(mc.est)}</span></div>`:""}
     ${byCat("out").map(([k,v])=>`<div class="ln"><span>${esc(k)}</span><span class="minus">−${rub(v)}</span></div>`).join("")}
     ${!mc.ops.length&&mc.est===null?`<p class="hint">В этом месяце операций нет.</p>`:""}</div>
+    ${mc.ops.length?`<p class="hint">Нажмите на операцию, чтобы изменить статью, сумму или дату.</p>`:""}
     ${mc.est!==null?`<p class="hint">Пока за этот месяц нет еженедельных отчётов WB, выплаты показаны оценкой. Отчёты загружаются сами вместе с продажами («Деньги» → «WB» → «Обновить»).</p>`:""}
     <div class="row2"><button type="button" class="btn main" data-act="opAdd">+ Приход или расход</button><button type="button" class="btn" data-act="opWB">+ Выплата WB</button></div></section>`;
   const unpaid=S.deals.filter(d=>!d.paidAt).sort((a,b)=>a.t-b.t);
@@ -1245,25 +1255,75 @@ function cashHtml(){
   const dealsM=S.deals.filter(d=>mk(d.t)===cashMonth).sort((a,b)=>b.t-a.t);
   const deals=dealsM.length?`<section class="sec"><h2>Опт за месяц <small>${rub(dealsM.reduce((a,d)=>a+d.sum,0))}</small></h2>${dealsM.map(d=>`<div class="opline"><span>${esc(d.buyer)}<small>${d.ret?"возврат: ":""}${esc(d.name)} × ${n1(Math.abs(d.q))} по ${rub(d.price)} · налог ${pct(d.tax,0)} · прибыль ${rub(dealProfit(d))}</small></span><b>${rub(d.sum)}</b><span class="tag ${d.paidAt?"ok":"warn"}">${d.paidAt?"оплачено":"ждём"}</span></div>`).join("")}</section>`:"";
   const opsL=mc.ops.slice().sort((a,b)=>b.t-a.t);
-  const ops=opsL.length?`<section class="sec"><h2>Операции</h2>${opsL.map(x=>`<div class="opline"><span>${esc(x.cat)}<small>${new Date(x.t).toLocaleDateString("ru-RU")}${x.note?" · "+esc(x.note):""}</small></span><b class="${x.type==="in"?"plus":"minus"}">${x.type==="in"?"+":"−"}${rub(x.amount)}</b><button type="button" class="xs" data-delop="${x.id}" aria-label="Удалить">×</button></div>`).join("")}</section>`:"";
+  const ops=opsL.length?`<section class="sec"><h2>Операции</h2>${opsL.map(x=>`<div class="opline"><span data-editop="${x.id}" style="cursor:pointer">${esc(x.cat)}${x.flag?' <span class="tag warn">проверьте</span>':""}<small>${new Date(x.t).toLocaleDateString("ru-RU")}${x.note?" · "+esc(x.note):""}</small></span><b class="${x.type==="in"?"plus":"minus"}">${x.type==="in"?"+":"−"}${rub(x.amount)}</b><button type="button" class="xs" data-delop="${x.id}" aria-label="Удалить">×</button></div>`).join("")}</section>`:"";
   return pbH+buyersCardHtml()+chips+kp+debts+cats+deals+ops;
 }
-function openOpForm(preset){
-  const p=Object.assign({type:"out",cat:"Прочее"},preset||{});
+function openOpForm(preset,editId){
+  const src=editId?S.money.find(x=>x.id===editId):null;
+  const linked=src&&src.ref&&(String(src.ref).startsWith("tax:")||S.deals.some(d=>d.id===src.ref));
+  const p=Object.assign({type:"out",cat:"Прочее"},src||preset||{});
   const opts=t=>(t==="in"?CAT_IN:CAT_OUT).map(c=>`<option ${c===p.cat?"selected":""}>${c}</option>`).join("");
-  openSheet(`<h2>${p.cat==="Выплата WB"?"Выплата WB":"Приход или расход"}</h2>
+  openSheet(`<h2>${src?"Операция":p.cat==="Выплата WB"?"Выплата WB":"Приход или расход"}</h2>
+   ${src&&src.flag?`<div class="verdict warn">${esc(src.flag)}</div>`:""}
+   ${linked?`<p class="sub" style="margin:0">Операция связана со сделкой или налогом: сумму и дату меняйте там. Здесь можно поменять статью и комментарий.</p>`:""}
    <div class="chan" id="o_type"><button type="button" data-t="in" class="${p.type==="in"?"on":""}">Приход</button><button type="button" data-t="out" class="${p.type==="out"?"on":""}">Расход</button></div>
-   <div class="grid2"><label class="field"><span>Статья</span><select id="o_cat" class="inp">${opts(p.type)}</select></label><label class="field"><span>Сумма, ₽</span><input id="o_sum" class="inp" type="text" inputmode="decimal" autofocus></label>
-   <label class="field"><span>Дата</span><input id="o_date" class="inp" type="date" value="${new Date().toISOString().slice(0,10)}"></label><label class="field"><span>Комментарий</span><input id="o_note" class="inp" type="text" placeholder="${p.cat==="Выплата WB"?"Например: отчёт 14–20 окт.":"Необязательно"}"></label></div>
+   <div class="grid2"><label class="field"><span>Статья</span><select id="o_cat" class="inp">${opts(p.type)}</select></label><label class="field"><span>Сумма, ₽</span><input id="o_sum" class="inp" type="text" inputmode="decimal" ${src?`value="${dec(src.amount)}"`:"autofocus"} ${linked?"disabled":""}></label>
+   <label class="field"><span>Дата</span><input id="o_date" class="inp" type="date" value="${new Date(src?src.t:Date.now()).toISOString().slice(0,10)}" ${linked?"disabled":""}></label><label class="field"><span>Комментарий</span><input id="o_note" class="inp" type="text" value="${src?esc(src.note||""):""}" placeholder="${p.cat==="Выплата WB"?"Например: отчёт 14–20 окт.":"Необязательно"}"></label></div>
    ${p.cat==="Выплата WB"?`<p class="hint">Сумма «Итого к оплате» из еженедельного финансового отчёта WB. Когда за месяц есть хотя бы одна выплата, оценка по продажам больше не используется.</p>`:""}
-   <div class="row2"><button type="button" class="btn main" id="o_ok">Добавить</button><button type="button" class="btn" id="o_no">Отмена</button></div>`,s=>{
+   <p class="hint">${p.cat===OWN||!src?"«Свои деньги (взнос)» — деньги, которые вы сами внесли (например, чтобы закрыть минус в кабинете WB). Они видны в кассе, но не считаются доходом и не идут в окупаемость.":""}</p>
+   <div class="row2"><button type="button" class="btn main" id="o_ok">${src?"Сохранить":"Добавить"}</button><button type="button" class="btn" id="o_no">Отмена</button>${src&&!linked?`<button type="button" class="btn danger" id="o_del">Удалить</button>`:""}</div>`,s=>{
     let type=p.type;
     s.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{type=b.dataset.t;s.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("on",x===b));s.querySelector("#o_cat").innerHTML=(type==="in"?CAT_IN:CAT_OUT).map(c=>`<option>${c}</option>`).join("")});
     s.querySelector("#o_no").onclick=closeSheet;
-    s.querySelector("#o_ok").onclick=()=>{const a=num(s.querySelector("#o_sum").value);if(!(a>0)){toast("Введите сумму");return}
+    const od=s.querySelector("#o_del");if(od)od.onclick=()=>{S.money=S.money.filter(x=>x.id!==src.id);save();closeSheet();renderMain();toast("Удалено")};
+    s.querySelector("#o_ok").onclick=()=>{
+      if(src&&linked){src.cat=s.querySelector("#o_cat").value;src.note=s.querySelector("#o_note").value.trim();src.userCat=1;save();closeSheet();renderMain();toast("Сохранено");return}
+      const a=num(s.querySelector("#o_sum").value);if(!(a>0)){toast("Введите сумму");return}
       const dv=s.querySelector("#o_date").value,t=dv?new Date(dv+"T12:00:00").getTime():Date.now();
-      S.money.push({id:uid(),t,type,cat:s.querySelector("#o_cat").value,amount:Math.round(a*100)/100,note:s.querySelector("#o_note").value.trim()});
-      cashMonth=mk(t);save();closeSheet();renderMain();toast("Добавлено")};
+      const v={t,type,cat:s.querySelector("#o_cat").value,amount:Math.round(a*100)/100,note:s.querySelector("#o_note").value.trim()};
+      if(src){Object.assign(src,v,{userCat:1});delete src.flag}else S.money.push({id:uid(),...v});
+      cashMonth=mk(t);save();closeSheet();renderMain();toast(src?"Сохранено":"Добавлено")};
+  });
+}
+
+/* ================= импорт истории из Excel ================= */
+function loadXLSX(){return new Promise((ok,no)=>{if(window.XLSX)return ok(window.XLSX);const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=()=>ok(window.XLSX);sc.onerror=()=>no(new Error("Не удалось загрузить модуль чтения Excel. Нужен интернет."));document.head.appendChild(sc)})}
+function expCat(name){const n=String(name).toLowerCase();if(/кабинет|регистрац|открыти/.test(n))return "Запуск бизнеса";if(/пластин|принтер|стол|сушил|сопл/.test(n))return "Оборудование";if(/расходник/.test(n))return "Расходники";return "Разработка моделей"}
+function parseHistory(rows){
+  const cellStr=v=>String(v==null?"":v).trim();
+  let h=rows.findIndex(r=>r&&r.some(c=>/номенклатур/i.test(cellStr(c))));
+  const inc=[],exp=[];
+  if(h>=0){const hr=rows[h].map(cellStr);const ci=hr.findIndex(c=>/номенклатур/i.test(c)),cq=hr.findIndex(c=>/кол-во|количеств/i.test(c)),cp=hr.findIndex(c=>/чист.*прибыл/i.test(c));
+    for(let i=h+1;i<rows.length;i++){const r=rows[i]||[];const nm=cellStr(r[ci]);if(!nm)continue;if(/общий итог|^итого/i.test(nm))break;if(/^расходы$/i.test(nm))break;
+      const pv=Number(r[cp]);if(isFinite(pv)&&pv)inc.push({name:nm,q:Number(r[cq])||0,profit:Math.round(pv*100)/100})}}
+  const e=rows.findIndex(r=>r&&/^расходы$/i.test(cellStr(r[0])));
+  if(e>=0)for(let i=e+1;i<rows.length;i++){const r=rows[i]||[];const nm=cellStr(r[0]);if(!nm)break;const v=Number(r[1]);if(isFinite(v)&&v>0)exp.push({name:nm,amount:Math.round(v*100)/100,cat:expCat(nm)})}
+  return {inc,exp};
+}
+async function importHistoryFile(file){
+  let X;try{X=await loadXLSX()}catch(e){toast(e.message);return}
+  const buf=await file.arrayBuffer();const wb=X.read(buf,{type:"array"});
+  let res={inc:[],exp:[]};
+  for(const n of wb.SheetNames){const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});const r=parseHistory(rows);if(r.inc.length||r.exp.length){res=r;break}}
+  if(!res.inc.length&&!res.exp.length){openSheet(`<h2>Не нашёл данных</h2><p class="sub" style="margin:0">Нужна таблица с колонками «Номенклатура» и «Чистая прибыль» и/или блоком «Расходы» (название и сумма).</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet);return}
+  const prev=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
+  const sumI=res.inc.reduce((a,x)=>a+x.profit,0),sumE=res.exp.reduce((a,x)=>a+x.amount,0);
+  openSheet(`<h2>Импорт истории</h2>
+   <label class="field"><span>Дата, которой записать историю</span><input id="h_date" class="inp" type="date" value="2025-12-01"><small>В таблице нет дат по месяцам, поэтому всё запишется одной датой. Лучше ставить начало продаж: так история не исказит прогноз по последним месяцам.</small></label>
+   <div class="box"><h3>Приход: ${HIST_IN} · ${rub(sumI)}</h3><p class="hint">Берётся «Чистая прибыль» по каждому изделию: она уже за вычетом себестоимости.</p>
+    <details><summary class="hint">${res.inc.length} строк</summary>${res.inc.map(x=>`<div class="ln"><small>${esc(x.name)} · ${n1(x.q,0)} шт</small><small>${rub(x.profit)}</small></div>`).join("")}</details></div>
+   <div class="box"><h3>Расходы · ${rub(sumE)}</h3>${res.exp.map((x,i)=>`<div class="ln" style="align-items:center"><span>${esc(x.name)}<br><small>${rub(x.amount)}</small></span><select class="inp" style="flex:none;width:168px" data-hcat="${i}">${CAT_OUT.map(c=>`<option ${c===x.cat?"selected":""}>${c}</option>`).join("")}</select></div>`).join("")}
+    <p class="hint">Оборудование, разработка моделей и запуск бизнеса считаются вложениями: их должна окупить работа. Остальное — обычные расходы.</p></div>
+   ${prev?`<p class="hint neg">Прошлый импорт (${prev} записей) будет заменён этим.</p>`:""}
+   <div class="row2"><button type="button" class="btn main" id="h_ok">Добавить в кассу</button><button type="button" class="btn" id="h_no">Отмена</button></div>`,s=>{
+    s.querySelector("#h_no").onclick=closeSheet;
+    s.querySelector("#h_ok").onclick=()=>{
+      const dv=s.querySelector("#h_date").value||"2025-12-01",t=new Date(dv+"T12:00:00").getTime();
+      s.querySelectorAll("[data-hcat]").forEach(el=>res.exp[+el.dataset.hcat].cat=el.value);
+      S.money=S.money.filter(m=>!String(m.ref||"").startsWith("hist:"));
+      res.inc.forEach((x,i)=>S.money.push({id:uid(),t,type:"in",cat:HIST_IN,amount:x.profit,note:`${x.name}: ${n1(x.q,0)} шт (сводная)`,ref:"hist:i"+i}));
+      res.exp.forEach((x,i)=>S.money.push({id:uid(),t,type:"out",cat:x.cat,amount:x.amount,note:x.name,ref:"hist:e"+i}));
+      save();closeSheet();view="plan";salesTab="cash";cashMonth=mk(t);render();toast(`Добавлено: ${res.inc.length+res.exp.length} записей`)};
   });
 }
 
@@ -1486,7 +1546,10 @@ function moreHtml(){
    ${whs.length?`<div class="grid2"><label class="field"><span>Склад для логистики</span><select id="wb_wh" class="inp">${whs.map(w=>`<option value="${esc(w.name)}" ${curW&&w.name===curW.name?"selected":""}>${esc(w.name)} — ${n1(cfg.model==="fbw"?w.fbw1:w.fbs1,1)} ₽</option>`).join("")}</select><small>FBS: строка «Маркетплейс» вашего региона</small></label>
    <label class="field"><span>Схема продаж</span><select id="wb_model" class="inp">${Object.keys(MODEL_TXT).map(k=>`<option value="${k}" ${cfg.model===k?"selected":""}>${MODEL_TXT[k]}</option>`).join("")}</select><small>какую комиссию брать</small></label></div>`:""}
    <div class="row2"><button class="btn main" type="button" data-act="wbConnect">${wc?"Обновить тарифы":"Подключить"}</button>${cfg.url?`<button class="btn ghost" type="button" data-act="wbOff">Отключить</button>`:""}</div></div>`;
-  return themeCardHtml()+wbCard+syncCardHtml()+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
+  const histN=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
+  const histCard=`<div class="card"><h2>Импорт истории из Excel</h2><p>Продажи и расходы, которые были до начала учёта в приложении: сводная с колонками «Номенклатура» и «Чистая прибыль» и блок «Расходы». Попадут в кассу и в окупаемость.</p>${histN?`<p>Сейчас загружено записей: ${histN}. Повторный импорт заменит их.</p>`:""}
+   <label class="btn" for="histIn">Выбрать файл .xlsx</label><input id="histIn" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>`;
+  return themeCardHtml()+wbCard+syncCardHtml()+histCard+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
    <div class="row2"><button class="btn main" type="button" data-act="exportJson">Сохранить копию в файл</button></div></div>
   <div class="card"><h2>Загрузить копию</h2><p>Подходят копии этого приложения и старых «Склад 3D» и «Цена 3D». Две старые копии можно загрузить по очереди — они объединятся.</p>
    <label class="btn" for="fileIn">Выбрать файл .json</label><input id="fileIn" type="file" accept=".json,application/json,text/plain" hidden>
@@ -1545,6 +1608,7 @@ $("#main").addEventListener("click",e=>{
   const st=e.target.closest("[data-stab]");if(st){salesTab=st.dataset.stab;renderMain();return}
   const cmo=e.target.closest("[data-cmonth]");if(cmo){cashMonth=cmo.dataset.cmonth;renderMain();return}
   const pdl=e.target.closest("[data-paydeal]");if(pdl){payDeal(pdl.dataset.paydeal);renderMain();return}
+  const eop=e.target.closest("[data-editop]");if(eop){openOpForm(null,eop.dataset.editop);return}
   const dop=e.target.closest("[data-delop]");if(dop){const x=S.money.find(o=>o.id===dop.dataset.delop);if(x)confirmSheet("Удалить операцию?",`${esc(x.cat)}: ${rub(x.amount)}${x.note?" · "+esc(x.note):""}`,"Удалить",()=>{S.money=S.money.filter(o=>o.id!==x.id);if(x.ref&&String(x.ref).startsWith("tax:")){delete S.tax.paid[String(x.ref).slice(4)]}const d=S.deals.find(dd=>dd.id===x.ref);if(d)d.paidAt=null;save();renderMain();toast("Удалено")});return}
   const tpy=e.target.closest("[data-taxpay]");if(tpy){openTaxPay(tpy.dataset.taxpay);return}
   const mo=e.target.closest("[data-month]");if(mo){salesMonth=mo.dataset.month;renderMain();return}
@@ -1586,6 +1650,7 @@ $("#main").addEventListener("change",e=>{
   if(e.target.id==="tax_bonus"){const v=num(e.target.value);S.tax.bonus=isFinite(v)&&v>=0?v:null;save();renderMain();toast("Остаток вычета сохранён")}
   if(e.target.id==="wb_wh"){S.wbcfg.wh=e.target.value;save();toast("Склад выбран. Тариф запомнится при следующем обновлении")}
   if(e.target.id==="wb_model"){S.wbcfg.model=e.target.value;save();renderMain();toast("Схема изменена")}
+  if(e.target.id==="histIn"){const f=e.target.files[0];if(f)importHistoryFile(f);e.target.value=""}
   if(e.target.id==="fileIn"){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>handleImport(String(r.result));r.readAsText(f);e.target.value=""}
   if(e.target.dataset&&e.target.dataset.p){const v=num(e.target.value);if(isFinite(v)&&v>=0){S.p[e.target.dataset.p]=v/(+e.target.dataset.m);save();toast("Сохранено, всё пересчитано")}else{toast("Введите число");e.target.value=String(Math.round(S.p[e.target.dataset.p]*e.target.dataset.m*1000)/1000).replace(".",",")}}
 });
@@ -1595,7 +1660,7 @@ $("#main").addEventListener("input",e=>{
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
 applyTheme();
-window.__m={doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
+window.__m={parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
 document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
