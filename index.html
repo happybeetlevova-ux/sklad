@@ -180,7 +180,7 @@ input[type=color].inp{height:44px;padding:4px}
 .btn.small{padding:8px 10px;font-size:13px}
 .row2{display:flex;gap:8px;flex-wrap:wrap}.row2>*{flex:1 1 140px}
 .rec{display:grid;grid-template-columns:1fr 96px 40px;gap:6px;align-items:center}
-.rec.ex{grid-template-columns:1fr 96px 40px}
+.rec.ex{grid-template-columns:1fr 92px 40px 40px}
 .x{border:0;background:var(--sunk);border-radius:10px;height:42px;font-size:18px;color:var(--muted)}
 .box{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
 .box h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -732,16 +732,16 @@ function renderProd(){
     <div class="grid2">${F("f_sku","Артикул WB",d.sku,"","",'inputmode="numeric"')}${F("f_opt","Оптовая цена (базовая)",d.opt>0?dec(d.opt):"","₽","от неё считаются скидки покупателей")}${F("f_min","Минимум на складе",dec(d.min),"шт","ниже — «пополнить»")}</div>
     ${F("f_h","Время печати 1 шт",d.h>0?dec(d.h):"","","из Bambu Studio: «1:22», «1ч 22м» или «1,36»")}<p class="hint" id="h_time"></p>
   </section>
-  <section class="sec"><h2>Состав на 1 шт <small>списывается со склада при печати</small></h2>
-    <p class="hint">Вес пластика бери из Bambu Studio вместе с поддержками и продувкой при смене цвета. Цена берётся со склада.</p>
+  <section class="sec"><h2>Из чего состоит 1 шт <small>отсюда считается себестоимость</small></h2>
+    <div class="box"><h3>Со склада — списывается при «Напечатал»</h3>
+    <p class="hint">Цена берётся из закупок в «Материалах». Вес пластика — из Bambu Studio вместе с поддержками и продувкой.</p>
     <div id="recBox" style="display:flex;flex-direction:column;gap:6px"></div>
-    <div class="row2"><button type="button" class="btn small" id="addPl">+ Пластик</button><button type="button" class="btn small" id="addPt">+ Деталь / упаковка</button></div>
-  </section>
-  <section class="sec"><h2>Расходы без учёта на складе <small>₽ на 1 шт</small></h2>
-    <p class="hint">Для того, что не ведёте на складе. Если позиция уже есть в «Составе», здесь её быть не должно — иначе посчитается дважды.</p>
+    <div class="row2"><button type="button" class="btn small" id="addPl">+ Пластик</button><button type="button" class="btn small" id="addPt">+ Деталь / упаковка</button></div></div>
+    <div class="box"><h3>Без склада — только в себестоимости, ₽ на 1 шт</h3>
+    <p class="hint">Для мелочей, которые не пересчитываете поштучно. Кнопка <b>📦</b> переносит статью на склад: появится деталь в «Материалах», и она будет списываться при печати.</p>
     ${d.g0>0?`<div class="grid2">${F("f_g0","Пластик без привязки",dec(d.g0),"г",`по ${n1(d.p0k||S.p.ppk,0)} ₽/кг. Когда добавите пластик в «Состав», очистите это поле`)}</div>`:""}
     <div id="exBox" style="display:flex;flex-direction:column;gap:6px"></div>
-    <div class="chips"><button type="button" class="chip" data-ex="Коробка / пакет|11">+ Коробка 11 ₽</button><button type="button" class="chip" data-ex="Пакет мелкий|0.64">+ Пакет 0,64 ₽</button><button type="button" class="chip" data-ex="Маркировка|1.3">+ Маркировка 1,3 ₽</button><button type="button" class="chip" data-ex="Прочее|0">+ Другое</button></div>
+    <div class="chips"><button type="button" class="chip" data-ex="Коробка / пакет|11">+ Коробка 11 ₽</button><button type="button" class="chip" data-ex="Пакет мелкий|0.64">+ Пакет 0,64 ₽</button><button type="button" class="chip" data-ex="Маркировка|1.3">+ Маркировка 1,3 ₽</button><button type="button" class="chip" data-ex="Прочее|0">+ Другое</button></div></div>
   </section>
   <section class="sec"><h2>Wildberries FBS <small><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="f_on" ${b.off?"":"checked"}> продаю на WB</label></small></h2>
     <div id="wbBox" ${b.off?"hidden":""}>
@@ -802,8 +802,14 @@ function drawRec(){
 }
 function drawEx(){
   const box=$("#exBox");if(!box)return;
-  box.innerHTML=draft.ex.map((e,i)=>`<div class="rec ex" data-x="${i}"><input class="inp" type="text" value="${esc(e.n)}" aria-label="Статья расхода"><div class="suf"><input class="inp" type="text" inputmode="decimal" value="${e.v>0?dec(e.v):""}" placeholder="0" aria-label="Сумма"><i>₽</i></div><button type="button" class="x" aria-label="Убрать">×</button></div>`).join("");
-  box.querySelectorAll(".x").forEach(bt=>bt.onclick=()=>{readForm();draft.ex.splice(+bt.parentElement.dataset.x,1);drawEx();markDirty();update()});
+  box.innerHTML=draft.ex.map((e,i)=>`<div class="rec ex" data-x="${i}"><input class="inp" type="text" value="${esc(e.n)}" aria-label="Статья расхода"><div class="suf"><input class="inp" type="text" inputmode="decimal" value="${e.v>0?dec(e.v):""}" placeholder="0" aria-label="Сумма"><i>₽</i></div><button type="button" class="x tostock" title="Вести на складе" aria-label="Вести на складе">📦</button><button type="button" class="x" aria-label="Убрать">×</button></div>`).join("");
+  box.querySelectorAll(".x:not(.tostock)").forEach(bt=>bt.onclick=()=>{readForm();draft.ex.splice(+bt.parentElement.dataset.x,1);drawEx();markDirty();update()});
+  box.querySelectorAll(".tostock").forEach(bt=>bt.onclick=()=>{readForm();const i=+bt.parentElement.dataset.x,e=draft.ex[i];if(!e||!e.n){toast("Сначала напишите название");return}
+    let pt=S.parts.find(p=>p.name.toLowerCase()===e.n.trim().toLowerCase());const created=!pt;
+    if(!pt){pt={id:uid(),name:e.n.trim(),unit:"шт",min:0,qty:0,price:e.v>0?e.v:0};S.parts.push(pt);save()}
+    if(!draft.rec.pt.some(r=>r.id===pt.id))draft.rec.pt.push({id:pt.id,q:1});
+    draft.ex.splice(i,1);drawRec();drawEx();markDirty();update();
+    toast(created?`«${pt.name}» теперь на складе (${rub(pt.price,2)}/шт). Укажите остаток в «Материалах»`:`Используется деталь «${pt.name}» со склада`)});
 }
 function readForm(){
   const v=id=>{const e=$("#"+id);return e?e.value:""},n=id=>num(v(id)),p=id=>{const x=n(id);return isFinite(x)?x/100:NaN};
@@ -1275,7 +1281,7 @@ function openOpForm(preset,editId){
     let type=p.type;
     s.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{type=b.dataset.t;s.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("on",x===b));s.querySelector("#o_cat").innerHTML=(type==="in"?CAT_IN:CAT_OUT).map(c=>`<option>${c}</option>`).join("")});
     s.querySelector("#o_no").onclick=closeSheet;
-    const od=s.querySelector("#o_del");if(od)od.onclick=()=>{S.money=S.money.filter(x=>x.id!==src.id);save();closeSheet();renderMain();toast("Удалено")};
+    const od=s.querySelector("#o_del");if(od)od.onclick=()=>{S.money=S.money.filter(x=>x.id!==src.id);S.log.forEach(le=>{if(le.moneyId===src.id){delete le.moneyId;delete le.prevPrice}});save();closeSheet();renderMain();toast("Удалено")};
     s.querySelector("#o_ok").onclick=()=>{
       if(src&&linked){src.cat=s.querySelector("#o_cat").value;src.note=s.querySelector("#o_note").value.trim();src.userCat=1;save();closeSheet();renderMain();toast("Сохранено");return}
       const a=num(s.querySelector("#o_sum").value);if(!(a>0)){toast("Введите сумму");return}
@@ -1337,16 +1343,22 @@ async function importHistoryFile(file){
   for(const n of wb.SheetNames){const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});const r=parseHistory(rows);if(r.mode||r.exp.length){res=r;break}}
   if(!res){openSheet(`<h2>Не нашёл данных</h2><p class="sub" style="margin:0">Нужна таблица заказов с колонками «Статус», «Дата», «Наименование», «Кол-во», «Прибыль» или сводная с «Номенклатура» и «Чистая прибыль». Расходы — блок с заголовком «Расходы» (название и сумма рядом).</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet);return}
   const prev=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
-  const sumI=res.mode==="rows"?res.months.reduce((a,x)=>a+x.profit,0):res.inc.reduce((a,x)=>a+x.profit,0),sumE=res.exp.reduce((a,x)=>a+x.amount,0);
+  const sumI=res.mode==="rows"?res.months.reduce((a,x)=>a+x.amount,0):res.inc.reduce((a,x)=>a+x.profit,0),sumE=res.exp.reduce((a,x)=>a+x.amount,0);
   const firstDay=res.first?new Date(res.first.getFullYear(),res.first.getMonth(),res.first.getDate(),12).toISOString().slice(0,10):"2025-12-01";
   const optInApp=S.deals.filter(d=>!d.ret).length;
-  const incH=res.mode==="rows"?`<div class="box"><h3>Приход по месяцам · ${rub(sumI)}</h3><p class="hint">По каждому месяцу — сумма «Прибыли» оплаченных заказов. Статья «${HIST_IN}».</p>
-     ${res.months.map(o=>`<div class="ln"><small>${mLabel(o.m)} · заказов ${o.n}, ${n1(o.q,0)} шт${o.rev?", выручка "+rub(o.rev):""}</small><small>${rub(o.profit)}</small></div>`).join("")}
+  const buys=S.money.filter(m=>m.type==="out"&&(m.cat==="Пластик"||m.cat==="Детали и упаковка")&&!String(m.ref||"").startsWith("hist:")).map(m=>m.t);
+  const cutM=buys.length?mk(Math.min(...buys)):null;
+  const useRev=o=>cutM&&o.m>=cutM&&o.rev>0;
+  if(res.mode==="rows")res.months.forEach(o=>{o.useRev=useRev(o);o.amount=o.useRev?o.rev:o.profit});
+  const incH=res.mode==="rows"?`<div class="box"><h3>Приход по месяцам · ${rub(sumI)}</h3><p class="hint">${cutM?`С ${mLabel(cutM).toLowerCase()} в приложении записываются закупки пластика и деталей, поэтому с этого месяца берётся <b>выручка</b> заказов, а до него — <b>прибыль</b>. Иначе материалы вычлись бы дважды: в прибыли из таблицы и в закупках в кассе.`:"Берётся «Прибыль» оплаченных заказов: закупки материалов в приложении пока не записывались, и прибыль из таблицы уже учитывает их стоимость."} Статья «${HIST_IN}».</p>
+     ${res.months.map(o=>`<div class="ln"><small>${mLabel(o.m)} · заказов ${o.n}, ${n1(o.q,0)} шт · ${o.useRev?"выручка":"прибыль"}</small><small>${rub(o.amount)}</small></div>`).join("")}
      ${res.skipped?`<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="h_unpaid"> Учесть ещё ${res.skipped} стр. без статуса «Оплачен» (${rub(res.skippedProfit)})</label>`:""}</div>`
     :res.mode==="pivot"?`<div class="box"><h3>Приход · ${rub(sumI)}</h3><p class="hint">В сводной нет дат, поэтому всё запишется одной датой.</p><details><summary class="hint">${res.inc.length} строк</summary>${res.inc.map(x=>`<div class="ln"><small>${esc(x.name)} · ${n1(x.q,0)} шт</small><small>${rub(x.profit)}</small></div>`).join("")}</details></div>`:"";
   openSheet(`<h2>Импорт истории</h2>${incH}
    ${res.exp.length?`<div class="box"><h3>Расходы · ${rub(sumE)}</h3>${res.exp.map((x,i)=>`<div class="ln" style="align-items:center"><span>${esc(x.name)}<br><small>${rub(x.amount)}</small></span><select class="inp" style="flex:none;width:168px" data-hcat="${i}">${CAT_OUT.map(c=>`<option ${c===x.cat?"selected":""}>${c}</option>`).join("")}</select></div>`).join("")}
     <p class="hint">Оборудование, разработка моделей и запуск бизнеса считаются вложениями: их должна окупить работа. Остальное — обычные расходы.</p></div>`:""}
+   ${res.mode==="rows"?`<div class="grid2"><label class="field"><span>Налог с этих заказов</span><select id="h_tax" class="inp"><option value="">Не считать (уже уплачен)</option><option value="0.06">6% — ИП, организации</option><option value="0.04">4% — частные лица</option></select></label>
+     <label class="field"><span>Считать налог с месяца</span><input id="h_taxfrom" class="inp" type="month" value="${curM()}"></label></div><p class="hint">Если опт продолжаете вести в этой таблице, выберите ставку — выручка попадёт в «Налоги» и в лимит 2,4 млн.</p>`:""}
    <label class="field"><span>${res.mode==="rows"?"Дата для расходов":"Дата для истории"}</span><input id="h_date" class="inp" type="date" value="${firstDay}"><small>${res.mode==="rows"?"У расходов в таблице нет дат. По умолчанию — дата первого заказа.":"Лучше ставить начало продаж: так история не исказит прогноз."}</small></label>
    ${optInApp?`<p class="hint neg">В приложении уже есть ${optInApp} оптовых сделок. Если они же есть в этой таблице, деньги посчитаются дважды. Ведите опт в одном месте.</p>`:""}
    ${prev?`<p class="hint">Прошлый импорт (${prev} записей) будет заменён этим — файл можно загружать снова после каждого обновления.</p>`:""}
@@ -1361,7 +1373,8 @@ async function importHistoryFile(file){
         let months=res.months;
         const inclU=s.querySelector("#h_unpaid");if(inclU&&inclU.checked){/* пересчитать с неоплаченными */}
         months.forEach(o=>{const [y,mm]=o.m.split("-").map(Number);const tt=Math.min(o.last,new Date(y,mm,0,12).getTime());
-          S.money.push({id:uid(),t:tt,type:"in",cat:HIST_IN,amount:o.profit,note:`Заказы из таблицы: ${o.n} зак., ${n1(o.q,0)} шт${o.rev?", выручка "+rub(o.rev):""}`,ref:"hist:m"+o.m});cnt++});
+          const tr=s.querySelector("#h_tax").value,tf=s.querySelector("#h_taxfrom").value||curM();
+          S.money.push({id:uid(),t:tt,type:"in",cat:HIST_IN,amount:Math.round(o.amount*100)/100,rev:o.rev,taxRate:tr&&o.m>=tf?+tr:null,note:`Заказы из таблицы: ${o.n} зак., ${n1(o.q,0)} шт, ${o.useRev?"выручка":"прибыль"}${o.useRev?"":", выручка "+rub(o.rev)}`,ref:"hist:m"+o.m});cnt++});
         if(inclU&&inclU.checked&&res.skipped)S.money.push({id:uid(),t:Date.now(),type:"in",cat:HIST_IN,amount:Math.round(res.skippedProfit*100)/100,note:`Заказы без статуса «Оплачен»: ${res.skipped}`,ref:"hist:unpaid"}),cnt++;
       }else res.inc.forEach((x,i)=>{S.money.push({id:uid(),t,type:"in",cat:HIST_IN,amount:x.profit,note:`${x.name}: ${n1(x.q,0)} шт (сводная)`,ref:"hist:i"+i});cnt++});
       res.exp.forEach((x,i)=>{S.money.push({id:uid(),t,type:"out",cat:x.cat,amount:x.amount,note:x.name,ref:"hist:e"+i});cnt++});
@@ -1449,6 +1462,12 @@ function taxMonth(m){
   if(c&&c.rows&&c.months&&c.months.includes(m))wb=c.rows.filter(r=>r.m===m).reduce((a,r)=>a+r.rev,0);
   const ds=S.deals.filter(d=>mk(d.t)===m);
   const b6=ds.filter(d=>d.tax===0.06).reduce((a,d)=>a+d.sum,0),b4o=ds.filter(d=>d.tax===0.04).reduce((a,d)=>a+d.sum,0),b0=ds.filter(d=>!d.tax).reduce((a,d)=>a+d.sum,0);
+  const hist=S.money.filter(x=>x.taxRate&&mk(x.t)===m&&String(x.ref||"").startsWith("hist:m"));
+  const h4=hist.filter(x=>x.taxRate===0.04).reduce((a,x)=>a+(x.rev||0),0),h6=hist.filter(x=>x.taxRate===0.06).reduce((a,x)=>a+(x.rev||0),0);
+  const b4o2=b4o+h4,b6b=b6+h6;
+  return taxMonthRes(m,wb,b4o2,b6b,b0);
+}
+function taxMonthRes(m,wb,b4o,b6,b0){
   const b4=(wb||0)+b4o;
   return {m,wb,b4o,b4,b6,b0,gross:b4*0.04+b6*0.06,bonusMax:b4*0.01+b6*0.02,paid:S.tax.paid[m]||null};
 }
@@ -1464,6 +1483,7 @@ function yearIncome(){
   const y=String(new Date().getFullYear());let v=0;
   const c=salesLoad();if(c&&c.rows)c.rows.filter(r=>r.m.startsWith(y)).forEach(r=>v+=r.rev);
   S.deals.filter(d=>d.tax&&new Date(d.t).getFullYear()===+y).forEach(d=>v+=d.sum);
+  S.money.filter(x=>x.taxRate&&String(x.ref||"").startsWith("hist:m")&&new Date(x.t).getFullYear()===+y).forEach(x=>v+=x.rev||0);
   return v;
 }
 function taxDue(){
@@ -1651,7 +1671,7 @@ $("#main").addEventListener("click",e=>{
   const cmo=e.target.closest("[data-cmonth]");if(cmo){cashMonth=cmo.dataset.cmonth;renderMain();return}
   const pdl=e.target.closest("[data-paydeal]");if(pdl){payDeal(pdl.dataset.paydeal);renderMain();return}
   const eop=e.target.closest("[data-editop]");if(eop){openOpForm(null,eop.dataset.editop);return}
-  const dop=e.target.closest("[data-delop]");if(dop){const x=S.money.find(o=>o.id===dop.dataset.delop);if(x)confirmSheet("Удалить операцию?",`${esc(x.cat)}: ${rub(x.amount)}${x.note?" · "+esc(x.note):""}`,"Удалить",()=>{S.money=S.money.filter(o=>o.id!==x.id);if(x.ref&&String(x.ref).startsWith("tax:")){delete S.tax.paid[String(x.ref).slice(4)]}const d=S.deals.find(dd=>dd.id===x.ref);if(d)d.paidAt=null;save();renderMain();toast("Удалено")});return}
+  const dop=e.target.closest("[data-delop]");if(dop){const x=S.money.find(o=>o.id===dop.dataset.delop);if(x)confirmSheet("Удалить операцию?",`${esc(x.cat)}: ${rub(x.amount)}${x.note?" · "+esc(x.note):""}`,"Удалить",()=>{S.money=S.money.filter(o=>o.id!==x.id);S.log.forEach(le=>{if(le.moneyId===x.id){delete le.moneyId;delete le.prevPrice}});if(x.ref&&String(x.ref).startsWith("tax:")){delete S.tax.paid[String(x.ref).slice(4)]}const d=S.deals.find(dd=>dd.id===x.ref);if(d)d.paidAt=null;save();renderMain();toast("Удалено")});return}
   const tpy=e.target.closest("[data-taxpay]");if(tpy){openTaxPay(tpy.dataset.taxpay);return}
   const mo=e.target.closest("[data-month]");if(mo){salesMonth=mo.dataset.month;renderMain();return}
   const bd=e.target.closest("[data-bind]");if(bd){openBind(bd.dataset.bind);return}
