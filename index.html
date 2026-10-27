@@ -1289,41 +1289,83 @@ function openOpForm(preset,editId){
 /* ================= импорт истории из Excel ================= */
 function loadXLSX(){return new Promise((ok,no)=>{if(window.XLSX)return ok(window.XLSX);const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=()=>ok(window.XLSX);sc.onerror=()=>no(new Error("Не удалось загрузить модуль чтения Excel. Нужен интернет."));document.head.appendChild(sc)})}
 function expCat(name){const n=String(name).toLowerCase();if(/кабинет|регистрац|открыти/.test(n))return "Запуск бизнеса";if(/пластин|принтер|стол|сушил|сопл/.test(n))return "Оборудование";if(/расходник/.test(n))return "Расходники";return "Разработка моделей"}
+function toDate(v){
+  if(v instanceof Date&&!isNaN(v))return v;
+  if(typeof v==="number"&&v>20000&&v<80000)return new Date(Math.round((v-25569)*86400000)+new Date().getTimezoneOffset()*60000);
+  const s=String(v==null?"":v).trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],12);
+  m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);if(m)return new Date(+(m[3].length===2?"20"+m[3]:m[3]),+m[2]-1,+m[1],12);
+  return null;
+}
 function parseHistory(rows){
-  const cellStr=v=>String(v==null?"":v).trim();
-  let h=rows.findIndex(r=>r&&r.some(c=>/номенклатур/i.test(cellStr(c))));
-  const inc=[],exp=[];
-  if(h>=0){const hr=rows[h].map(cellStr);const ci=hr.findIndex(c=>/номенклатур/i.test(c)),cq=hr.findIndex(c=>/кол-во|количеств/i.test(c)),cp=hr.findIndex(c=>/чист.*прибыл/i.test(c));
-    for(let i=h+1;i<rows.length;i++){const r=rows[i]||[];const nm=cellStr(r[ci]);if(!nm)continue;if(/общий итог|^итого/i.test(nm))break;if(/^расходы$/i.test(nm))break;
-      const pv=Number(r[cp]);if(isFinite(pv)&&pv)inc.push({name:nm,q:Number(r[cq])||0,profit:Math.round(pv*100)/100})}}
-  const e=rows.findIndex(r=>r&&/^расходы$/i.test(cellStr(r[0])));
-  if(e>=0)for(let i=e+1;i<rows.length;i++){const r=rows[i]||[];const nm=cellStr(r[0]);if(!nm)break;const v=Number(r[1]);if(isFinite(v)&&v>0)exp.push({name:nm,amount:Math.round(v*100)/100,cat:expCat(nm)})}
-  return {inc,exp};
+  const cs=v=>String(v==null?"":v).trim();
+  const res={mode:null,inc:[],months:[],exp:[],skipped:0,skippedProfit:0,first:null};
+  /* формат 1: построчные заказы — Статус, Дата, Наименование, Кол-во, Прибыль, Розничная цена */
+  const h=rows.findIndex(r=>r&&r.some(c=>/^дата$/i.test(cs(c)))&&r.some(c=>/прибыл/i.test(cs(c)))&&r.some(c=>/наименован|номенклатур/i.test(cs(c))));
+  if(h>=0){
+    const hr=rows[h].map(cs),col=re=>hr.findIndex(c=>re.test(c));
+    const cSt=col(/статус/i),cD=col(/^дата$/i),cN=col(/наименован|номенклатур/i),cQ=col(/кол-во|количеств/i),cP=col(/прибыл/i),cR=col(/розничн|выручк|сумма/i);
+    const by={};
+    for(let i=h+1;i<rows.length;i++){const r=rows[i]||[];const nm=cs(r[cN]);const d=toDate(r[cD]);const p=Number(r[cP]);
+      if(!nm||!d||!isFinite(p))continue;
+      const st=cSt>=0?cs(r[cSt]):"Оплачен";
+      if(!/оплач/i.test(st)){res.skipped++;res.skippedProfit+=p;continue}
+      const m=mk(d.getTime());const o=by[m]||(by[m]={m,profit:0,q:0,rev:0,n:0,last:0});
+      o.profit+=p;o.q+=Number(r[cQ])||0;o.rev+=Number(r[cR])||0;o.n++;o.last=Math.max(o.last,d.getTime());
+      if(!res.first||d<res.first)res.first=d;
+    }
+    res.months=Object.values(by).sort((a,b)=>a.m<b.m?-1:1).map(o=>({...o,profit:Math.round(o.profit*100)/100,rev:Math.round(o.rev*100)/100}));
+    if(res.months.length)res.mode="rows";
+  }
+  /* формат 2: сводная — Номенклатура, Кол-во, Чистая прибыль */
+  if(!res.mode){
+    const p=rows.findIndex(r=>r&&r.some(c=>/номенклатур/i.test(cs(c))));
+    if(p>=0){const hr=rows[p].map(cs);const ci=hr.findIndex(c=>/номенклатур/i.test(c)),cq=hr.findIndex(c=>/кол-во|количеств/i.test(c)),cp=hr.findIndex(c=>/прибыл/i.test(c));
+      for(let i=p+1;i<rows.length;i++){const r=rows[i]||[];const nm=cs(r[ci]);if(!nm)continue;if(/общий итог|^итого|^расходы$/i.test(nm))break;
+        const pv=Number(r[cp]);if(isFinite(pv)&&pv)res.inc.push({name:nm,q:Number(r[cq])||0,profit:Math.round(pv*100)/100})}
+      if(res.inc.length)res.mode="pivot"}
+  }
+  /* блок «Расходы»: в любом месте листа, название и сумма в соседних колонках */
+  for(let i=0;i<rows.length;i++){const r=rows[i]||[];const j=r.findIndex(c=>/^расходы$/i.test(cs(c)));if(j<0)continue;
+    for(let k=i+1;k<rows.length;k++){const rr=rows[k]||[];const nm=cs(rr[j]);if(!nm)break;const v=Number(rr[j+1]);if(isFinite(v)&&v>0)res.exp.push({name:nm,amount:Math.round(v*100)/100,cat:expCat(nm)})}
+    break}
+  return res;
 }
 async function importHistoryFile(file){
   let X;try{X=await loadXLSX()}catch(e){toast(e.message);return}
-  const buf=await file.arrayBuffer();const wb=X.read(buf,{type:"array"});
-  let res={inc:[],exp:[]};
-  for(const n of wb.SheetNames){const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});const r=parseHistory(rows);if(r.inc.length||r.exp.length){res=r;break}}
-  if(!res.inc.length&&!res.exp.length){openSheet(`<h2>Не нашёл данных</h2><p class="sub" style="margin:0">Нужна таблица с колонками «Номенклатура» и «Чистая прибыль» и/или блоком «Расходы» (название и сумма).</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet);return}
+  const buf=await file.arrayBuffer();const wb=X.read(buf,{type:"array",cellDates:true});
+  let res=null;
+  for(const n of wb.SheetNames){const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null});const r=parseHistory(rows);if(r.mode||r.exp.length){res=r;break}}
+  if(!res){openSheet(`<h2>Не нашёл данных</h2><p class="sub" style="margin:0">Нужна таблица заказов с колонками «Статус», «Дата», «Наименование», «Кол-во», «Прибыль» или сводная с «Номенклатура» и «Чистая прибыль». Расходы — блок с заголовком «Расходы» (название и сумма рядом).</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet);return}
   const prev=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
-  const sumI=res.inc.reduce((a,x)=>a+x.profit,0),sumE=res.exp.reduce((a,x)=>a+x.amount,0);
-  openSheet(`<h2>Импорт истории</h2>
-   <label class="field"><span>Дата, которой записать историю</span><input id="h_date" class="inp" type="date" value="2025-12-01"><small>В таблице нет дат по месяцам, поэтому всё запишется одной датой. Лучше ставить начало продаж: так история не исказит прогноз по последним месяцам.</small></label>
-   <div class="box"><h3>Приход: ${HIST_IN} · ${rub(sumI)}</h3><p class="hint">Берётся «Чистая прибыль» по каждому изделию: она уже за вычетом себестоимости.</p>
-    <details><summary class="hint">${res.inc.length} строк</summary>${res.inc.map(x=>`<div class="ln"><small>${esc(x.name)} · ${n1(x.q,0)} шт</small><small>${rub(x.profit)}</small></div>`).join("")}</details></div>
-   <div class="box"><h3>Расходы · ${rub(sumE)}</h3>${res.exp.map((x,i)=>`<div class="ln" style="align-items:center"><span>${esc(x.name)}<br><small>${rub(x.amount)}</small></span><select class="inp" style="flex:none;width:168px" data-hcat="${i}">${CAT_OUT.map(c=>`<option ${c===x.cat?"selected":""}>${c}</option>`).join("")}</select></div>`).join("")}
-    <p class="hint">Оборудование, разработка моделей и запуск бизнеса считаются вложениями: их должна окупить работа. Остальное — обычные расходы.</p></div>
-   ${prev?`<p class="hint neg">Прошлый импорт (${prev} записей) будет заменён этим.</p>`:""}
+  const sumI=res.mode==="rows"?res.months.reduce((a,x)=>a+x.profit,0):res.inc.reduce((a,x)=>a+x.profit,0),sumE=res.exp.reduce((a,x)=>a+x.amount,0);
+  const firstDay=res.first?new Date(res.first.getFullYear(),res.first.getMonth(),res.first.getDate(),12).toISOString().slice(0,10):"2025-12-01";
+  const optInApp=S.deals.filter(d=>!d.ret).length;
+  const incH=res.mode==="rows"?`<div class="box"><h3>Приход по месяцам · ${rub(sumI)}</h3><p class="hint">По каждому месяцу — сумма «Прибыли» оплаченных заказов. Статья «${HIST_IN}».</p>
+     ${res.months.map(o=>`<div class="ln"><small>${mLabel(o.m)} · заказов ${o.n}, ${n1(o.q,0)} шт${o.rev?", выручка "+rub(o.rev):""}</small><small>${rub(o.profit)}</small></div>`).join("")}
+     ${res.skipped?`<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="h_unpaid"> Учесть ещё ${res.skipped} стр. без статуса «Оплачен» (${rub(res.skippedProfit)})</label>`:""}</div>`
+    :res.mode==="pivot"?`<div class="box"><h3>Приход · ${rub(sumI)}</h3><p class="hint">В сводной нет дат, поэтому всё запишется одной датой.</p><details><summary class="hint">${res.inc.length} строк</summary>${res.inc.map(x=>`<div class="ln"><small>${esc(x.name)} · ${n1(x.q,0)} шт</small><small>${rub(x.profit)}</small></div>`).join("")}</details></div>`:"";
+  openSheet(`<h2>Импорт истории</h2>${incH}
+   ${res.exp.length?`<div class="box"><h3>Расходы · ${rub(sumE)}</h3>${res.exp.map((x,i)=>`<div class="ln" style="align-items:center"><span>${esc(x.name)}<br><small>${rub(x.amount)}</small></span><select class="inp" style="flex:none;width:168px" data-hcat="${i}">${CAT_OUT.map(c=>`<option ${c===x.cat?"selected":""}>${c}</option>`).join("")}</select></div>`).join("")}
+    <p class="hint">Оборудование, разработка моделей и запуск бизнеса считаются вложениями: их должна окупить работа. Остальное — обычные расходы.</p></div>`:""}
+   <label class="field"><span>${res.mode==="rows"?"Дата для расходов":"Дата для истории"}</span><input id="h_date" class="inp" type="date" value="${firstDay}"><small>${res.mode==="rows"?"У расходов в таблице нет дат. По умолчанию — дата первого заказа.":"Лучше ставить начало продаж: так история не исказит прогноз."}</small></label>
+   ${optInApp?`<p class="hint neg">В приложении уже есть ${optInApp} оптовых сделок. Если они же есть в этой таблице, деньги посчитаются дважды. Ведите опт в одном месте.</p>`:""}
+   ${prev?`<p class="hint">Прошлый импорт (${prev} записей) будет заменён этим — файл можно загружать снова после каждого обновления.</p>`:""}
    <div class="row2"><button type="button" class="btn main" id="h_ok">Добавить в кассу</button><button type="button" class="btn" id="h_no">Отмена</button></div>`,s=>{
     s.querySelector("#h_no").onclick=closeSheet;
     s.querySelector("#h_ok").onclick=()=>{
-      const dv=s.querySelector("#h_date").value||"2025-12-01",t=new Date(dv+"T12:00:00").getTime();
+      const dv=s.querySelector("#h_date").value||firstDay,t=new Date(dv+"T12:00:00").getTime();
       s.querySelectorAll("[data-hcat]").forEach(el=>res.exp[+el.dataset.hcat].cat=el.value);
       S.money=S.money.filter(m=>!String(m.ref||"").startsWith("hist:"));
-      res.inc.forEach((x,i)=>S.money.push({id:uid(),t,type:"in",cat:HIST_IN,amount:x.profit,note:`${x.name}: ${n1(x.q,0)} шт (сводная)`,ref:"hist:i"+i}));
-      res.exp.forEach((x,i)=>S.money.push({id:uid(),t,type:"out",cat:x.cat,amount:x.amount,note:x.name,ref:"hist:e"+i}));
-      save();closeSheet();view="plan";salesTab="cash";cashMonth=mk(t);render();toast(`Добавлено: ${res.inc.length+res.exp.length} записей`)};
+      let cnt=0;
+      if(res.mode==="rows"){
+        let months=res.months;
+        const inclU=s.querySelector("#h_unpaid");if(inclU&&inclU.checked){/* пересчитать с неоплаченными */}
+        months.forEach(o=>{const [y,mm]=o.m.split("-").map(Number);const tt=Math.min(o.last,new Date(y,mm,0,12).getTime());
+          S.money.push({id:uid(),t:tt,type:"in",cat:HIST_IN,amount:o.profit,note:`Заказы из таблицы: ${o.n} зак., ${n1(o.q,0)} шт${o.rev?", выручка "+rub(o.rev):""}`,ref:"hist:m"+o.m});cnt++});
+        if(inclU&&inclU.checked&&res.skipped)S.money.push({id:uid(),t:Date.now(),type:"in",cat:HIST_IN,amount:Math.round(res.skippedProfit*100)/100,note:`Заказы без статуса «Оплачен»: ${res.skipped}`,ref:"hist:unpaid"}),cnt++;
+      }else res.inc.forEach((x,i)=>{S.money.push({id:uid(),t,type:"in",cat:HIST_IN,amount:x.profit,note:`${x.name}: ${n1(x.q,0)} шт (сводная)`,ref:"hist:i"+i});cnt++});
+      res.exp.forEach((x,i)=>{S.money.push({id:uid(),t,type:"out",cat:x.cat,amount:x.amount,note:x.name,ref:"hist:e"+i});cnt++});
+      save();closeSheet();view="plan";salesTab="cash";cashMonth=curM();render();toast(`Добавлено записей: ${cnt}`)};
   });
 }
 
@@ -1547,7 +1589,7 @@ function moreHtml(){
    <label class="field"><span>Схема продаж</span><select id="wb_model" class="inp">${Object.keys(MODEL_TXT).map(k=>`<option value="${k}" ${cfg.model===k?"selected":""}>${MODEL_TXT[k]}</option>`).join("")}</select><small>какую комиссию брать</small></label></div>`:""}
    <div class="row2"><button class="btn main" type="button" data-act="wbConnect">${wc?"Обновить тарифы":"Подключить"}</button>${cfg.url?`<button class="btn ghost" type="button" data-act="wbOff">Отключить</button>`:""}</div></div>`;
   const histN=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
-  const histCard=`<div class="card"><h2>Импорт истории из Excel</h2><p>Продажи и расходы, которые были до начала учёта в приложении: сводная с колонками «Номенклатура» и «Чистая прибыль» и блок «Расходы». Попадут в кассу и в окупаемость.</p>${histN?`<p>Сейчас загружено записей: ${histN}. Повторный импорт заменит их.</p>`:""}
+  const histCard=`<div class="card"><h2>Импорт истории из Excel</h2><p>Заказы вне WB (опт, заказы) и расходы из вашей Excel-таблицы: строки «Статус, Дата, Наименование, Кол-во, Прибыль, Розничная цена» и блок «Расходы». Прибыль разложится по месяцам и попадёт в кассу и окупаемость. Загружайте обновлённый файл когда угодно — прошлый импорт заменится.</p>${histN?`<p>Сейчас загружено записей: ${histN}. Повторный импорт заменит их.</p>`:""}
    <label class="btn" for="histIn">Выбрать файл .xlsx</label><input id="histIn" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>`;
   return themeCardHtml()+wbCard+syncCardHtml()+histCard+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
    <div class="row2"><button class="btn main" type="button" data-act="exportJson">Сохранить копию в файл</button></div></div>
