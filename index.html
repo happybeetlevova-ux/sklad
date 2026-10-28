@@ -181,6 +181,7 @@ input[type=color].inp{height:44px;padding:4px}
 .row2{display:flex;gap:8px;flex-wrap:wrap}.row2>*{flex:1 1 140px}
 .rec{display:grid;grid-template-columns:1fr 96px 40px;gap:6px;align-items:center}
 .rec.ex{grid-template-columns:1fr 92px 40px 40px}
+.rec.lnk{grid-template-columns:82px minmax(0,1fr) 40px}
 .x{border:0;background:var(--sunk);border-radius:10px;height:42px;font-size:18px;color:var(--muted)}
 .box{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
 .box h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -302,13 +303,13 @@ function parseTime(s){
 /* ================= данные и перенос ================= */
 function valid(d){return d&&d.v===2&&Array.isArray(d.products)&&Array.isArray(d.plastics)&&Array.isArray(d.parts)}
 function normName(s){return String(s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
-function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true},o||{})}
+function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true,plate:1,plateH:0,links:[]},o||{})}
 const WBCFG_DEF={url:"",wh:"",model:"fbs",last:""};
 const UI_DEF={accent:"teal",mode:"auto",icon:"nozzle",iconColor:"auto"};
 function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(!Array.isArray(d.buyers)){d.buyers=[];
   d.deals.slice().sort((a,b)=>a.t-b.t).forEach(x=>{if(!x.buyer)return;let b=d.buyers.find(y=>y.name.toLowerCase()===String(x.buyer).toLowerCase());
     if(!b){b={id:uid(),name:x.buyer,tax:x.tax,phone:"",note:"",disc:0,prices:{}};d.buyers.push(b)}b.tax=x.tax;b.prices[x.pid]=x.price;x.bid=b.id})}
-  if(d.wbSnap===undefined)d.wbSnap=null;d.ordCfg=Object.assign({on:false,start:0,planMail:true},d.ordCfg||{});if(!d.ordApplied||typeof d.ordApplied!=='object')d.ordApplied={};if(!d.ordBack||typeof d.ordBack!=='object')d.ordBack={};d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true});return d}
+  if(d.wbSnap===undefined)d.wbSnap=null;d.ordCfg=Object.assign({on:false,start:0,planMail:true},d.ordCfg||{});if(!d.ordApplied||typeof d.ordApplied!=='object')d.ordApplied={};if(!d.ordBack||typeof d.ordBack!=='object')d.ordBack={};d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true;if(!(p.plate>=1))p.plate=1;if(!(p.plateH>0))p.plateH=0;if(!Array.isArray(p.links))p.links=[]});return d}
 function migrate(sk,ce){
   const p={...DEF,...((ce&&ce.p)||{})};
   const D={v:2,p,products:[],plastics:[],parts:[],log:[]};
@@ -752,7 +753,12 @@ function renderProd(){
   <section class="sec"><h2>Изделие</h2>
     <label class="field"><span>Название</span><input id="f_name" class="inp" type="text" value="${esc(d.name)}" placeholder="Например: Подставка под телефон"></label>
     <div class="grid2">${F("f_sku","Артикул WB",d.sku,"","",'inputmode="numeric"')}${F("f_opt","Оптовая цена (базовая)",d.opt>0?dec(d.opt):"","₽","от неё считаются скидки покупателей")}${F("f_min","Минимум на складе",dec(d.min),"шт","ниже — «пополнить»")}</div>
-    ${F("f_h","Время печати 1 шт",d.h>0?dec(d.h):"","","из Bambu Studio: «1:22», «1ч 22м» или «1,36»")}<p class="hint" id="h_time"></p>
+    <div class="box"><h3>Раскладка на печатном столе</h3>
+    <div class="grid2">${F("f_plate","Штук на столе",d.plate>1?dec(d.plate):"1","шт","сколько ставите за одну печать")}${F("f_plateH","Время всего стола",d.plateH>0?dec(d.plateH):"","","из Bambu Studio, если на столе больше 1 шт")}</div>
+    ${F("f_h","Время печати 1 шт",d.h>0?dec(d.h):"","","из Bambu Studio: «1:22», «1ч 22м» или «1,36»",d.plate>1&&d.plateH>0?"readonly":"")}<p class="hint" id="h_time"></p>
+    <p class="hint">План печати считает целыми столами. Вес пластика в «Составе» — на 1 шт: вес всего стола ÷ штук на столе.</p></div>
+    <div class="box"><h3>Ссылки на товар</h3><div id="lnBox" style="display:flex;flex-direction:column;gap:6px"></div>
+    <div class="chips"><button type="button" class="chip" data-ln="WB">+ WB</button><button type="button" class="chip" data-ln="Ozon">+ Ozon</button><button type="button" class="chip" data-ln="Сайт">+ Сайт</button><button type="button" class="chip" data-ln="">+ Другая</button></div></div>
   </section>
   <section class="sec"><h2>Из чего состоит 1 шт <small>отсюда считается себестоимость</small></h2>
     <div class="box"><h3>Со склада — списывается при «Напечатал»</h3>
@@ -770,7 +776,7 @@ function renderProd(){
     <div class="grid2">${F("f_pb","Цена до скидки",b.pb>0?dec(b.pb):"","₽")}${F("f_disc","Скидка продавца",pin(b.disc),"%")}</div>
     <p class="hint" id="h_price" style="margin:6px 0 10px"></p>
     <div class="field" style="margin-bottom:10px"><span>Предмет WB <small style="font-weight:500">— комиссия обновляется сама</small></span><button type="button" class="subjbtn" id="f_subj"></button></div>
-    <div class="grid3">${F("f_comm","Комиссия",pin(b.comm),"%",d.subj?"из тарифов WB":"по категории")}${F("f_ads","Реклама",pin(b.ads),"%","от цены")}${F("f_spp","СПП",pin(b.spp),"%","для справки")}${F("f_lb","Логистика база",dec(b.lb),"₽","ваша фактическая")}${F("f_buy","Выкуп",pin(b.buy),"%")}${F("f_acc","Платная приёмка",dec(b.acc||0),"₽")}</div>
+    <div class="grid3">${F("f_comm","Комиссия",pin(b.comm),"%",d.subj?"из тарифов WB":"по категории")}${F("f_ads","Реклама",pin(b.ads),"%","от цены")}${F("f_spp","СПП",pin(b.spp),"%","для справки")}${F("f_lb","Логистика база",dec(b.lb),"₽","ваша фактическая")}${F("f_buy","Выкуп",pin(b.buy),"%")}${F("f_acc","Платная приёмка",dec(b.acc||0),"₽")}</div><p class="hint" id="h_buy"></p>
     <div class="grid2" style="margin-top:10px">${F("f_vol","Объём упаковки",d.vol>0?dec(d.vol):"","л","Д×Ш×В в см ÷ 1000")}<label class="field"><span>Логистика</span><label style="display:flex;gap:8px;align-items:center;padding:10px 0"><input type="checkbox" id="f_autolog" ${d.autoLog!==false?"checked":""}> менять вместе с тарифом WB</label></label></div>
     </div>
   </section>
@@ -782,10 +788,11 @@ function renderProd(){
   window.scrollTo(0,0);
   m.oninput=e=>{if(e.target.id==="f_tm")return;readForm();markDirty();update()};
   m.onchange=e=>{if(e.target.id==="f_autolog"){readForm();markDirty();return}if(e.target.id==="f_on"){draft.wb.off=!e.target.checked;$("#wbBox").hidden=draft.wb.off;readForm();markDirty();update()}else if(e.target.tagName==="SELECT"){readForm();markDirty();update()}};
-  drawRec();drawEx();drawStock();drawSubj();
+  drawRec();drawEx();drawLinks();drawStock();drawSubj();
   $("#f_subj").onclick=()=>{readForm();openSubjPicker((sj,rate)=>{draft.subj=sj;if(rate!==null){draft.wb.comm=rate/100;const ci=$("#f_comm");if(ci)ci.value=pin(rate/100)}drawSubj();markDirty();update()})};
   $("#addPl").onclick=()=>{if(!S.plastics.length){toast("Сначала добавьте пластик во вкладке «Материалы»");return}readForm();draft.rec.pl.push({id:S.plastics[0].id,q:0});drawRec();markDirty();update()};
   $("#addPt").onclick=()=>{if(!S.parts.length){toast("Сначала добавьте детали во вкладке «Материалы»");return}readForm();draft.rec.pt.push({id:S.parts[0].id,q:0});drawRec();markDirty();update()};
+  m.querySelectorAll("[data-ln]").forEach(bt=>bt.onclick=()=>{readForm();const t=bt.dataset.ln;draft.links.push({t,u:t==="WB"&&/^\d+$/.test(draft.sku)?wbLink(draft.sku):""});drawLinks();markDirty()});
   m.querySelectorAll("[data-ex]").forEach(bt=>bt.onclick=()=>{readForm();const [n,v]=bt.dataset.ex.split("|");draft.ex.push({n,v:+v});drawEx();markDirty();update()});
   $("#e_save").onclick=()=>saveDraft(true);
   if(editId){
@@ -809,7 +816,7 @@ function drawStock(){
   el.innerHTML=`<h2>Склад <small>${STATE_TXT[st]} · мин. ${n1(p.min)} шт</small></h2>
     <div class="bar"><div class="big">${n1(p.qty)}<small>шт</small></div><span class="tag ${st}">${STATE_TXT[st]}</span></div>
     <div class="actions" style="grid-template-columns:1fr 1fr"><button type="button" class="btn main" data-pop="print">Напечатал</button><button type="button" class="btn" data-pop="ship">Отгрузил</button><button type="button" class="btn" data-pop="ret">Вернулось</button><button type="button" class="btn ghost" data-pop="set">Пересчёт</button></div>
-    <p class="hint">${cm===null?"Состав не указан: при печати материалы не спишутся.":`Материалов на складе хватит ещё на <b>${cm} шт</b>.`}</p>`;
+    <p class="hint">${cm===null?"Состав не указан: при печати материалы не спишутся.":`Материалов на складе хватит ещё на <b>${cm} шт</b>.`}</p>${linksHtml(p)}`;
   el.querySelectorAll("[data-pop]").forEach(b=>b.onclick=()=>{
     if(dirty&&!saveDraft(false,true))return;
     openAction("products",editId,b.dataset.pop,()=>{draft.qty=find("products",editId).qty;drawStock();topBar();update()});
@@ -833,11 +840,23 @@ function drawEx(){
     draft.ex.splice(i,1);drawRec();drawEx();markDirty();update();
     toast(created?`«${pt.name}» теперь на складе (${rub(pt.price,2)}/шт). Укажите остаток в «Материалах»`:`Используется деталь «${pt.name}» со склада`)});
 }
+function normUrl(u){u=String(u||"").trim();if(!u)return "";if(!/^https?:\/\//i.test(u))u="https://"+u;try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:""}catch(e){return ""}}
+function wbLink(sku){return "https://www.wildberries.ru/catalog/"+encodeURIComponent(sku)+"/detail.aspx"}
+function prodLinks(p){const L=(p.links||[]).filter(l=>normUrl(l.u));if(/^\d{5,}$/.test(String(p.sku||""))&&!L.some(l=>/wildberries\.ru/.test(l.u)))L.unshift({t:"WB",u:wbLink(p.sku),auto:true});return L}
+function linksHtml(p){const L=prodLinks(p);return L.length?`<div class="chips" style="margin-top:8px">${L.map(l=>`<a class="chip" href="${esc(normUrl(l.u))}" target="_blank" rel="noopener noreferrer">${esc(l.t||"Ссылка")} ↗</a>`).join("")}</div>`:""}
+function drawLinks(){
+  const box=$("#lnBox");if(!box)return;
+  box.innerHTML=draft.links.length?draft.links.map((l,i)=>`<div class="rec lnk" data-l="${i}"><input class="inp" type="text" value="${esc(l.t)}" placeholder="Где" aria-label="Название ссылки"><input class="inp" type="url" inputmode="url" value="${esc(l.u)}" placeholder="https://…" aria-label="Адрес"><button type="button" class="x" aria-label="Убрать">×</button></div>`).join(""):`<p class="hint">${/^\d{5,}$/.test(String(draft.sku||""))?"Ссылка на WB берётся из артикула сама. Добавьте Ozon, свой сайт и другие.":"Добавьте ссылки на карточки товара: WB, Ozon, свой сайт."}</p>`;
+  box.querySelectorAll(".x").forEach(bt=>bt.onclick=()=>{readForm();draft.links.splice(+bt.parentElement.dataset.l,1);drawLinks();markDirty()});
+}
 function readForm(){
   const v=id=>{const e=$("#"+id);return e?e.value:""},n=id=>num(v(id)),p=id=>{const x=n(id);return isFinite(x)?x/100:NaN};
   const d=draft;if(!$("#f_name"))return;
   d.name=v("f_name").trim();d.sku=v("f_sku").trim();const op_=n("f_opt");d.opt=op_>0?op_:0;const mn=n("f_min");d.min=mn>=0?mn:0;
-  d.h=parseTime(v("f_h"));const g0=n("f_g0");d.g0=g0>0?g0:0;
+  const pc=n("f_plate");d.plate=pc>=1?Math.floor(pc):1;const ph=parseTime(v("f_plateH"));d.plateH=ph>0?ph:0;
+  const hf=$("#f_h");if(d.plate>1&&d.plateH>0){d.h=d.plateH/d.plate;if(hf){hf.readOnly=true;hf.value=dec(Math.round(d.h*10000)/10000)}}else{if(hf&&hf.readOnly){hf.readOnly=false}d.h=parseTime(v("f_h"))}
+  if($("#lnBox"))d.links=[...document.querySelectorAll("#lnBox .rec")].map(r=>{const ins=r.querySelectorAll("input");return {t:ins[0].value.trim(),u:ins[1].value.trim()}});
+  const g0=n("f_g0");d.g0=g0>0?g0:0;
   const pl=[],pt=[];document.querySelectorAll("#recBox .rec").forEach(r=>{const q=num(r.querySelector("input").value);(r.dataset.k==="pl"?pl:pt).push({id:r.querySelector("select").value,q:q>0?q:0})});d.rec={pl,pt};
   d.ex=[...document.querySelectorAll("#exBox .rec")].map(r=>{const ins=r.querySelectorAll("input");const val=num(ins[1].value);return {n:ins[0].value.trim(),v:val>0?val:0}});
   const vl=n("f_vol");d.vol=vl>0?vl:0;const al=$("#f_autolog");if(al)d.autoLog=al.checked;
@@ -847,12 +866,15 @@ function readForm(){
 function cleanItem(d){
   const x=JSON.parse(JSON.stringify(d));if(!(x.h>0))x.h=0;
   x.rec.pl=x.rec.pl.filter(r=>r.q>0);x.rec.pt=x.rec.pt.filter(r=>r.q>0);x.ex=x.ex.filter(e=>e.v>0);
+  x.links=(x.links||[]).map(l=>({t:l.t||"Ссылка",u:normUrl(l.u)})).filter(l=>l.u);
   if(!x.wb||x.wb.off||!(x.wb.pb>0))x.wb=null;else delete x.wb.off;
   return x;
 }
 function update(){
   const d=draft,P=S.p;
-  const ht=$("#h_time");if(ht)ht.textContent=d.h>0?"= "+hm(d.h)+" печати":"";
+  const ht=$("#h_time");if(ht)ht.textContent=d.h>0?"= "+hm(d.h)+" печати"+(d.plate>1&&d.plateH>0?` на 1 шт (стол ${hm(d.plateH)} ÷ ${d.plate} шт)`:d.plate>1?` · стол ≈ ${hm(d.h*d.plate)}`:""):"";
+  const hb=$("#h_buy");if(hb){const f=editId?buyFact(find("products",editId)||d):null;hb.innerHTML=f?`Факт по заказам FBS за 60 дней: <b>${pct(f.k,0)}</b> (выкуплено ${f.sold} из ${f.n}).${f.n>=5&&Math.abs(f.k-d.wb.buy)>=0.01?` <button type="button" class="undo" id="buyFact">Подставить</button>`:f.n<5?" Пока мало заказов для точной цифры.":""}`:"";
+    const bf=$("#buyFact");if(bf)bf.onclick=()=>{$("#f_buy").value=pin(f.k);readForm();markDirty();update()}}
   const tmp=cleanItem(d);if(!tmp.id)tmp.id="__draft";
   const r=calc(tmp),w=d.wb.off?null:r.w,ok=d.h>0&&r.c.grams>0;
   const hp=$("#h_price");if(hp)hp.textContent=d.wb.pb>0?`Цена после скидки ${rub(d.wb.pb*(1-d.wb.disc))} · покупатель увидит ≈ ${rub(d.wb.pb*(1-d.wb.disc)*(1-(d.wb.spp||0)))} с СПП`:"";
@@ -1071,11 +1093,11 @@ async function gPost(body){
 function errText(e){return e==="wrong_key"?"Ключ не совпадает с ключом в таблице. Посмотрите его в таблице: меню «WB тарифы» → «Показать ключ синхронизации».":e==="no_key"?"В таблице синхронизация ещё не включена.":e}
 function syncTables(){
   const R=ranks(),f=v=>isFinite(v)?Math.round(v*100)/100:"";
-  const stock=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(x=>{const r=calc(x),w=r.w;return [x.name,x.sku||"",f(x.qty),f(x.min),STATE_TXT[state(x)],f(r.c.total),w?f(x.wb.pb):"",w?f(w.G):"",w?f(w.Q):"",w?f(w.margin*100):"",w?f(w.perH):"",f(Math.max(0,x.qty)*r.c.total)]});
+  const stock=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(x=>{const r=calc(x),w=r.w;return [x.name,x.sku||"",f(x.qty),f(x.min),STATE_TXT[state(x)],f(r.c.total),w?f(x.wb.pb):"",w?f(w.G):"",w?f(w.Q):"",w?f(w.margin*100):"",w?f(w.perH):"",f(Math.max(0,x.qty)*r.c.total),prodLinks(x).map(l=>l.u).join(" ")]});
   const mats=[...S.plastics.map(m=>{const pk=m.pk>0?m.pk:S.p.ppk;return ["Пластик",m.name,f(m.qty),"г",f(m.min),STATE_TXT[state(m)],f(pk)+" ₽/кг",f(Math.max(0,m.qty)*pk/1000)]}),
     ...S.parts.map(m=>["Детали",m.name,f(m.qty),m.unit,f(m.min),STATE_TXT[state(m)],f(m.price||0),f(Math.max(0,m.qty)*(m.price||0))])];
   const log=S.log.slice(0,1000).map(e=>[new Date(e.t).toLocaleString("ru-RU"),e.text+(e.undone?" (отменено)":""),e.changes.map(c=>`${c.n}: ${c.d>0?"+":""}${n1(c.d)} ${c.u}`).join("; "),e.note||""]);
-  return {stock:{head:["Изделие","Артикул WB","Остаток, шт","Минимум","Статус","Себестоимость, ₽","Цена до скидки, ₽","Цена после скидки, ₽","Прибыль/шт, ₽","Маржа, %","₽ за час печати","Остаток по себестоимости, ₽"],rows:stock},
+  return {stock:{head:["Изделие","Артикул WB","Остаток, шт","Минимум","Статус","Себестоимость, ₽","Цена до скидки, ₽","Цена после скидки, ₽","Прибыль/шт, ₽","Маржа, %","₽ за час печати","Остаток по себестоимости, ₽","Ссылки"],rows:stock},
     mats:{head:["Раздел","Название","Остаток","Ед.","Минимум","Статус","Цена","Сумма, ₽"],rows:mats},
     log:{head:["Дата","Операция","Изменения","Комментарий"],rows:log},
     money:{head:["Дата","Приход/расход","Статья","Сумма, ₽","Комментарий"],rows:S.money.slice().sort((a,b)=>b.t-a.t).map(x=>[new Date(x.t).toLocaleDateString("ru-RU"),x.type==="in"?"Приход":"Расход",x.cat,f(x.amount),x.note||""])},
@@ -1572,7 +1594,8 @@ function openBind(nm){
 
 /* ================= заказы WB FBS и что печатать ================= */
 /* ===== Планировщик печати (одинаковый в приложении и в Google-скрипте) =====
- * products: [{id,name,qty,min,h,pl:[{id,q}],perH,rate}]  rate — продаж в день, perH — прибыль за час печати
+ * products: [{id,name,qty,min,h,pl:[{id,q}],perH,rate,plate,plateH}]  rate — расход в день, perH — прибыль за час печати,
+ *   plate — сколько штук помещается на стол, plateH — время печати всего стола (если пусто — h × plate)
  * plastics: [{id,name,qty,min}]
  * opt: {hours, days}  hours — сколько часов печати есть, days — на сколько дней держать запас
  */
@@ -1595,18 +1618,23 @@ function planPrint(products, plastics, opt) {
   var items = [], skipped = [];
   cand.forEach(function (c) {
     var p = c.p;
-    if (hoursLeft < p.h) { skipped.push({ name: p.name, need: c.need, reason: 'не хватает времени' }); return; }
-    var n = Math.min(c.need, Math.floor(hoursLeft / p.h + 1e-9)), shortPl = null;
+    var per = p.plate > 1 ? Math.floor(p.plate) : 1, ph = p.plateH > 0 ? p.plateH : p.h * per;
+    var fresh = hoursLeft >= opt.hours - 1e-9; /* стол длиннее рабочего дня можно поставить, если день ещё пустой */
+    var byTime = Math.floor(hoursLeft / ph + 1e-9);
+    if (byTime < 1 && fresh && hoursLeft > 0) byTime = 1;
+    if (byTime < 1) { skipped.push({ name: p.name, need: c.need, reason: per > 1 ? 'стол не помещается по времени' : 'не хватает времени' }); return; }
+    var plates = Math.min(Math.ceil(c.need / per), byTime), shortPl = null;
     (p.pl || []).forEach(function (r) {
       if (!(r.q > 0)) return;
-      var can = Math.floor((stockPl[r.id] || 0) / r.q + 1e-9);
-      if (can < n) { n = can; shortPl = plName[r.id] || 'пластик'; }
+      var can = Math.floor((stockPl[r.id] || 0) / (r.q * per) + 1e-9);
+      if (can < plates) { plates = can; shortPl = plName[r.id] || 'пластик'; }
     });
-    if (n <= 0) { skipped.push({ name: p.name, need: c.need, reason: 'не хватает: ' + (shortPl || 'пластик') }); return; }
+    if (plates <= 0) { skipped.push({ name: p.name, need: c.need, reason: 'не хватает: ' + (shortPl || 'пластик') }); return; }
+    var n = plates * per;
     var used = [];
     (p.pl || []).forEach(function (r) { if (r.q > 0) { stockPl[r.id] -= r.q * n; used.push({ name: plName[r.id] || 'пластик', g: Math.round(r.q * n) }); } });
-    hoursLeft -= n * p.h;
-    items.push({ id: p.id, name: p.name, n: n, hours: Math.round(n * p.h * 100) / 100, plastic: used, qty: c.qty, rate: c.rate,
+    hoursLeft = Math.max(0, hoursLeft - plates * ph);
+    items.push({ id: p.id, name: p.name, n: n, plates: plates, per: per, long: ph > opt.hours, hours: Math.round(plates * ph * 100) / 100, plastic: used, qty: c.qty, rate: c.rate,
       daysLeft: c.daysLeft, perH: p.perH, short: shortPl && n < c.need ? shortPl : null, need: c.need });
   });
   var warn = [];
@@ -1646,6 +1674,11 @@ function ordersApply(){
   if(ids.length||bids.length)save();
   return n;
 }
+/* Фактический выкуп: выкуплено ÷ (выкуплено + отказы после отправки) по заказам FBS за 60 дней */
+function buyFact(p){const c=ordLoad();if(!c||!c.rows||!p)return null;let sold=0,ref=0;const lim=Date.now()-62*86400000;
+  for(const o of c.rows){if(Date.parse(o.at)<lim)continue;const q=matchProd(o);if(!q||q.id!==p.id)continue;const wb=String(o.wb||"");
+    if(wb==="sold")sold++;else if((wb==="canceled_by_client"||wb==="declined_by_client"||wb==="canceled")&&!cancelledBeforeShip(o.sup,o.wb))ref++}
+  const n=sold+ref;return n?{k:sold/n,sold,n}:null}
 function ordUnbound(){const c=ordLoad();if(!c||!S.ordCfg.on)return [];const by={};
   for(const o of c.rows){if(Date.parse(o.at)<(S.ordCfg.start||0)||S.ordApplied[String(o.id)]||cancelledBeforeShip(o.sup,o.wb)||matchProd(o))continue;
     const k=String(o.nm);(by[k]||(by[k]={nm:o.nm,art:o.art,n:0})).n++}
@@ -1659,12 +1692,12 @@ function ordRate(){
   let days=30;
   if(!have){const sc=salesLoad();if(sc&&sc.rows){const m0=curM(),m1=prevM(m0,1),[y,mm]=m1.split("-").map(Number);days=new Date().getDate()+new Date(y,mm,0).getDate();
     for(const r of sc.rows){if(r.m!==m0&&r.m!==m1)continue;const p=matchProd(r);if(!p)continue;rate[p.id]=(rate[p.id]||0)+(r.n-r.r)}}}
-  const out={};for(const p of S.products){const v=rate[p.id]>0?rate[p.id]/days:(p.plan||0)/30;out[p.id]=v}
+  const out={};for(const p of S.products){const k=have?Math.min(1,p.wb&&p.wb.buy>0?p.wb.buy:S.p.buy):1;out[p.id]=rate[p.id]>0?rate[p.id]*k/days:(p.plan||0)/30}
   return {rate:out,src:have?"orders":"sales"};
 }
 function todayPlan(){
   const R=ordRate();
-  const prods=S.products.map(p=>{const r=calc(p);return {id:p.id,name:p.name,qty:p.qty,min:p.min||0,h:p.h||0,pl:p.rec.pl,perH:r.w?r.w.perH:0,rate:R.rate[p.id]||0}});
+  const prods=S.products.map(p=>{const r=calc(p);return {id:p.id,name:p.name,qty:p.qty,min:p.min||0,h:p.h||0,plate:p.plate||1,plateH:p.plateH||0,pl:p.rec.pl,perH:r.w?r.w.perH:0,rate:R.rate[p.id]||0}});
   const pls=S.plastics.map(m=>({id:m.id,name:m.name,qty:m.qty,min:m.min||0}));
   const plan=planPrint(prods,pls,{hours:(S.p.printers||1)*(S.p.printHours||14),days:S.p.stockDays||14});
   plan.src=R.src;return plan;
@@ -1674,8 +1707,8 @@ function todayBarHtml(){
   return `<div class="wbbar"><div><b>Печать сегодня</b><small>${pl.items.length?`${pl.items.length} изд. · ${hm(pl.hoursUsed)}${pl.warn.length?" · пора купить пластик":""}`:"запаса хватает"}</small></div><button type="button" class="btn small ${pl.items.length?"main":""}" data-act="goPlan">План</button></div>`}
 function todayHtml(){
   const pl=todayPlan(),RT=ordRate().rate;
-  const src=S.ordCfg.on&&pl.src==="orders"?"по заказам WB за 30 дней":pl.src==="sales"&&salesLoad()?"по продажам WB":"по плану продаж ниже";
-  const rows=pl.items.map(it=>`<div class="ln" style="align-items:flex-start;gap:10px"><span><b>${esc(it.name)} × ${it.n}</b><br><small class="hint">${hm(it.hours)}${it.plastic.length?" · "+it.plastic.map(x=>esc(x.name)+" "+n1(x.g,0)+" г").join(", "):""} · есть ${n1(it.qty,0)} шт${it.rate>0?`, хватит на ${n1(it.daysLeft,0)} дн.`:", ниже минимума"}${it.short?` · больше не даёт ${esc(it.short)}`:""}</small></span><button type="button" class="btn small" data-todo="${it.id}" data-n="${it.n}">Напечатал</button></div>`).join("");
+  const src=S.ordCfg.on&&pl.src==="orders"?"по заказам WB за 30 дней × выкуп изделия":pl.src==="sales"&&salesLoad()?"по продажам WB":"по плану продаж ниже";
+  const rows=pl.items.map(it=>`<div class="ln" style="align-items:flex-start;gap:10px"><span><b>${esc(it.name)} × ${it.n}</b>${it.per>1?` <small class="hint">${it.plates} ${it.plates===1?"стол":it.plates<5?"стола":"столов"} по ${it.per} шт</small>`:""}<br><small class="hint">${hm(it.hours)}${it.long?" (дольше рабочего дня)":""}${it.plastic.length?" · "+it.plastic.map(x=>esc(x.name)+" "+n1(x.g,0)+" г").join(", "):""} · есть ${n1(it.qty,0)} шт${it.rate>0?`, хватит на ${n1(it.daysLeft,0)} дн.`:", ниже минимума"}${it.short?` · больше не даёт ${esc(it.short)}`:""}</small></span><button type="button" class="btn small" data-todo="${it.id}" data-n="${it.n}">Напечатал</button></div>`).join("");
   return `<section class="sec"><h2>Что печатать сегодня <small>${hm(pl.hours)} принтера</small></h2>
    ${pl.items.length?`<div class="lines">${rows}</div>`:`<p class="hint">Всего хватает на ${n1(S.p.stockDays||14,0)} дней продаж. Можно печатать новинки или запас.</p>`}
    ${pl.skipped.length?`<p class="hint">Не поместилось: ${pl.skipped.map(x=>esc(x.name)+" — "+esc(x.reason)).join("; ")}.</p>`:""}
@@ -1876,7 +1909,7 @@ $("#main").addEventListener("input",e=>{
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
 applyTheme();
-window.__m={ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
+window.__m={buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
 document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
