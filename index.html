@@ -198,6 +198,21 @@
 [data-style="graphite"] .wdg-bar i{box-shadow:0 0 10px var(--accent)}
 [data-style="draft"] .wdg{border-radius:3px;border:1.5px solid var(--line)}[data-style="draft"] .wdg-tile{border-radius:2px}[data-style="draft"] .wdg-bar,[data-style="draft"] .wdg-bar i{border-radius:0}
 [data-style="soft"] .wdg{border:0;border-radius:26px;box-shadow:0 2px 14px rgba(90,65,40,.07)}[data-style="soft"] .wdg-tile{border-radius:18px}
+
+/* сборка FBS, стикеры, факт */
+.fbsrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.fbsrow:last-child{border-bottom:0}.fbsrow small{display:block;color:var(--muted);font-size:12px}.fbsrow input{width:20px;height:20px}
+.fbsgrp{font:700 13px var(--f-body);margin-top:8px}
+.fbspick{display:flex;flex-wrap:wrap;gap:6px}.fbspick span{background:var(--sunk);border-radius:99px;padding:4px 10px;font-size:13px;font-weight:600}
+#printView{position:fixed;inset:0;z-index:50;background:#fff;color:#000;overflow:auto;padding:16px}
+#printView .pvbar{display:flex;gap:8px;margin-bottom:12px;position:sticky;top:0;background:#fff;padding:6px 0}
+#printView .btn{background:#eee!important;color:#111!important;border:1px solid #ccc!important;box-shadow:none!important;border-radius:10px!important;flex:0 0 auto;padding:10px 18px}
+#printView .btn.main{background:#111!important;color:#fff!important;border-color:#111!important}
+#printView .stk{width:58mm;height:40mm;display:flex;align-items:center;justify-content:center;margin:0 0 6px;border:1px dashed #bbb;page-break-after:always;break-after:page}
+#printView .stk.s40{width:40mm;height:30mm}
+#printView .stk img{max-width:100%;max-height:100%;image-rendering:pixelated}
+@media print{body>*:not(#printView){display:none!important}#printView{position:static;padding:0}#printView .pvbar{display:none}#printView .stk{border:0;margin:0}@page{margin:0}}
+.fact td.bad{color:var(--bad)}.fact td.good{color:var(--ok)}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -883,7 +898,8 @@ function renderProd(){
     <div class="box"><h3>Раскладка на печатном столе</h3>
     <div class="grid2">${F("f_plate","Штук на столе",d.plate>1?dec(d.plate):"1","шт","сколько ставите за одну печать")}${F("f_plateH","Время всего стола",d.plateH>0?dec(d.plateH):"","","из Bambu Studio, если на столе больше 1 шт")}</div>
     ${F("f_h","Время печати 1 шт",d.h>0?dec(d.h):"","","из Bambu Studio: «1:22», «1ч 22м» или «1,36»",d.plate>1&&d.plateH>0?"readonly":"")}<p class="hint" id="h_time"></p>
-    <p class="hint">План печати считает целыми столами. Вес пластика в «Составе» — на 1 шт: вес всего стола ÷ штук на столе.</p></div>
+    <div class="row2"><label class="btn small" for="f_3mf">Загрузить из Bambu Studio (.3mf)</label><input id="f_3mf" type="file" accept=".3mf,application/vnd.ms-package.3dmanufacturing-3dmodel+xml,application/octet-stream" hidden></div>
+    <p class="hint">План печати считает целыми столами. Вес пластика в «Составе» — на 1 шт: вес всего стола ÷ штук на столе. Файл .3mf заполнит это сам.</p></div>
     <div class="box"><h3>Ссылки на товар</h3><div id="lnBox" style="display:flex;flex-direction:column;gap:6px"></div>
     <div class="chips"><button type="button" class="chip" data-ln="WB">+ WB</button><button type="button" class="chip" data-ln="Ozon">+ Ozon</button><button type="button" class="chip" data-ln="Сайт">+ Сайт</button><button type="button" class="chip" data-ln="">+ Другая</button></div></div>
   </section>
@@ -911,10 +927,11 @@ function renderProd(){
   <section class="sec" id="wbSec"></section>
   <section class="sec" id="targetSec"></section>
   <section class="sec" id="optSec"></section>
+  <section class="sec" id="factSec" hidden></section>
   <div class="row2"><button type="button" class="btn main" id="e_save">${editId?"Сохранить":"Добавить изделие"}</button>${editId?`<button type="button" class="btn" id="e_dup">Копия (другой цвет)</button><button type="button" class="btn danger" id="e_del">Удалить</button>`:""}</div>`;
   window.scrollTo(0,0);
-  m.oninput=e=>{if(e.target.id==="f_tm")return;readForm();markDirty();update()};
-  m.onchange=e=>{if(e.target.id==="f_autolog"){readForm();markDirty();return}if(e.target.id==="f_on"){draft.wb.off=!e.target.checked;$("#wbBox").hidden=draft.wb.off;readForm();markDirty();update()}else if(e.target.tagName==="SELECT"){readForm();markDirty();update()}};
+  m.oninput=e=>{if(e.target.id==="f_tm"||e.target.id==="f_3mf"||e.target.closest("#sheet"))return;readForm();markDirty();update()};
+  m.onchange=e=>{if(e.target.id==="f_3mf"){const f=e.target.files[0];e.target.value="";if(f)import3mf(f);return}if(e.target.id==="f_autolog"){readForm();markDirty();return}if(e.target.id==="f_on"){draft.wb.off=!e.target.checked;$("#wbBox").hidden=draft.wb.off;readForm();markDirty();update()}else if(e.target.tagName==="SELECT"){readForm();markDirty();update()}};
   drawRec();drawEx();drawLinks();drawStock();drawSubj();
   $("#f_subj").onclick=()=>{readForm();openSubjPicker((sj,rate)=>{draft.subj=sj;if(rate!==null){draft.wb.comm=rate/100;const ci=$("#f_comm");if(ci)ci.value=pin(rate/100)}drawSubj();markDirty();update()})};
   $("#addPl").onclick=()=>{if(!S.plastics.length){toast("Сначала добавьте пластик во вкладке «Материалы»");return}readForm();draft.rec.pl.push({id:S.plastics[0].id,q:0});drawRec();markDirty();update()};
@@ -1014,6 +1031,7 @@ function update(){
   const dbl=doubleCount(tmp);
   $("#costSec").innerHTML=`<h2>Себестоимость <small>${rub(r.c.total,2)} за 1 шт</small></h2><div class="lines">${r.c.lines.filter(l=>l.v>0).map(l=>`<div class="ln"><span>${esc(l.t)}${l.h?` <small>· ${esc(l.h)}</small>`:""}</span><span>${rub(l.v,2)}</span></div>`).join("")}${miss?`<p class="hint neg">${miss} поз. из состава без цены — откройте их в «Материалах» и укажите цену.</p>`:""}${dbl.length?`<div class="verdict warn">Возможно, посчитано дважды: ${dbl.map(esc).join("; ")}. Уберите лишнее из «Расходов без учёта на складе».</div>`:""}<div class="ln total"><span>Итого</span><span>${rub(r.c.total,2)}</span></div></div>`;
   const ws=$("#wbSec"),ts=$("#targetSec"),os=$("#optSec");
+  drawFact(tmp,w,r);
   if(!w||!ok){ws.hidden=ts.hidden=os.hidden=true;return}
   ws.hidden=ts.hidden=os.hidden=false;
   const seg=[["Комиссия WB",w.comm,"--c2"],["Реклама",w.ads,"--c4"],["Логистика",w.L+w.acc,"--c3"],["Налог и эквайринг",w.tax+w.U,"--c5"],["Себестоимость",r.c.total,"--c6"],["Прибыль",Math.max(0,w.Q),"--c1"]];
@@ -1316,7 +1334,7 @@ async function salesFetch(btn){
   try{const d=await gGet({action:"sales",key:SY.key,months:13});if(!d.ok)throw new Error(errText(d.error));
     salesCache={at:d.at,from:d.from,months:d.months,rows:d.rows,fetched:Date.now()};try{localStorage.setItem(SAKEY,JSON.stringify(salesCache))}catch(e){}
     if(!salesMonth||!d.months.includes(salesMonth))salesMonth=d.months[0];
-    await ordersFetch();const pr=await payoutsFetch();toast(pr>0?`Продажи обновлены, выплат WB: ${pr}`:"Продажи обновлены")}
+    await ordersFetch();await factFetch();const pr=await payoutsFetch();toast(pr>0?`Продажи обновлены, выплат WB: ${pr}`:"Продажи обновлены")}
   catch(e){toast(e.message)}
   if(view==="plan")renderMain();
 }
@@ -1706,16 +1724,16 @@ function salesHtml(){
   if(!SY.on)return `<div class="empty"><b>Продажи приходят из WB через вашу Google Таблицу</b>Включите синхронизацию: «Ещё» → «Синхронизация с Google». Ключ защищает ваши продажи от посторонних.<div class="row2" style="margin-top:12px"><button type="button" class="btn main" data-act="goMore">Открыть настройки</button></div></div>`;
   const c=salesLoad();
   const upd=`<div class="wbbar"><div><b>Данные из WB</b><small>${c&&c.at?"WB → таблица: "+esc(new Date(c.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):"ещё не загружались"}${c?" · в телефоне с "+esc(new Date(c.fetched).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})):""}</small></div><button type="button" class="btn small main" data-act="salesFetch">Обновить</button></div>`;
-  if(!c)return upd+`<div class="empty"><b>Нажмите «Обновить»</b>Таблица загружает продажи из WB каждый день в 6:00. Первый раз в таблице выберите «WB тарифы» → «Загрузить продажи сейчас».</div>`;
+  if(!c)return upd+`<div class="empty"><b>Нажмите «Обновить»</b>Таблица загружает продажи из WB каждый день в 6:00. Первый раз в таблице выберите «WB тарифы» → «Загрузить продажи сейчас».</div>`+factOverviewHtml();
   const withData=c.months.filter(m=>c.rows.some(r=>r.m===m));
   if(!salesMonth||!c.months.includes(salesMonth))salesMonth=withData[0]||c.months[0];
   const chips=`<div class="months">${c.months.filter(m=>withData.includes(m)||m===c.months[0]).map(m=>`<button type="button" class="chip ${m===salesMonth?"on":""}" data-month="${m}">${mLabel(m)}</button>`).join("")}</div>`;
   const rows=c.rows.filter(r=>r.m===salesMonth),A=salesAgg(rows),t=A.tot;
-  if(!rows.length)return upd+chips+`<div class="empty"><b>Продаж за ${mLabel(salesMonth).toLowerCase()} нет</b>WB отдаёт данные с задержкой до 30 минут.</div>`+salesChart(c);
+  if(!rows.length)return upd+chips+`<div class="empty"><b>Продаж за ${mLabel(salesMonth).toLowerCase()} нет</b>WB отдаёт данные с задержкой до 30 минут.</div>`+salesChart(c)+factOverviewHtml();
   const kp=`<div class="kpis"><div class="kpi"><span>Продано</span><b>${n1(t.n-t.r,0)} шт</b><small>${t.r?`возвратов ${n1(t.r,0)}`:"без возвратов"}</small></div><div class="kpi"><span>Выручка</span><b>${rub(t.rev)}</b><small>к перечислению ${rub(t.pay)}</small></div><div class="kpi"><span>Прибыль ≈</span><b class="${t.profit<0?"neg":""}">${rub(t.profit)}</b><small>${t.unmatched?`без ${n1(t.unmatched,0)} шт не привязанных`:"оценка по вашим ставкам"}</small></div></div>`;
   const list=`<section class="sec"><h2>По изделиям <small>${mLabel(salesMonth)}</small></h2><div class="scroll"><table class="t"><thead><tr><th>Изделие</th><th>Шт</th><th>Выручка</th><th>Прибыль ≈</th></tr></thead><tbody>${A.list.map(a=>`<tr><td>${a.p?esc(a.p.name):`<span class="neg">Арт. ${esc(a.o.nm)}</span> <small class="hint">${esc(a.o.subj||"")} · ${esc(a.o.art||"")}</small><br><button type="button" class="undo" data-bind="${esc(a.o.nm)}">Привязать к изделию</button>`}</td><td>${n1(a.n-a.r,0)}${a.r?`<br><small class="hint">−${a.r} возвр.</small>`:""}</td><td>${rub(a.rev)}</td><td class="${a.profit<0?"neg":""}">${a.p?rub(a.profit):"—"}</td></tr>`).join("")}</tbody></table></div>
    <p class="hint">Выручка — по вашей цене после скидки, до СПП. Прибыль ≈ = к перечислению от WB − логистика − реклама − налог − себестоимость, по ставкам из карточек изделий. WB уточняет суммы в течение суток, точные цифры будут в еженедельном отчёте о реализации.</p></section>`;
-  return upd+chips+kp+salesChart(c)+list;
+  return upd+chips+kp+salesChart(c)+list+factOverviewHtml();
 }
 function openBind(nm){
   const items=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
@@ -1852,7 +1870,8 @@ function ordCardHtml(){
   const st=!o.on?"":c&&c.err?`<p class="neg">${esc(c.err)}</p>`:c?`<p>Проверено ${esc(new Date(c.fetched).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}. Списано заказов с ${esc(new Date(o.start).toLocaleDateString("ru-RU"))}: ${Object.keys(S.ordApplied).length}${un?`, <span class="neg">без изделия: ${un}</span>`:""}.</p>`:"<p>Ещё не проверялось.</p>";
   return `<div class="card"><h2>Заказы WB и план печати</h2>
    <p><b>Автосписание:</b> каждый новый заказ FBS списывает 1 шт со склада. Если покупатель отменил заказ до отправки — штука вернётся сама. Отказ после доставки отмечайте кнопкой «Вернулось», когда товар придёт.</p>${st}
-   <div class="row2">${o.on?`<button class="btn main" type="button" data-act="ordNow">Проверить сейчас</button><button class="btn ghost" type="button" data-act="ordOff">Выключить</button>`:`<button class="btn main" type="button" data-act="ordOn">Включить автосписание</button>`}</div>
+   <div class="row2"><button class="btn main" type="button" data-act="fbs">Сборка заказов FBS</button></div>
+   <div class="row2">${o.on?`<button class="btn" type="button" data-act="ordNow">Проверить сейчас</button><button class="btn ghost" type="button" data-act="ordOff">Выключить</button>`:`<button class="btn main" type="button" data-act="ordOn">Включить автосписание</button>`}</div>
    <p style="margin-top:12px"><b>Письмо в 17:30:</b> что напечатать сегодня, с учётом новых заказов. ${o.planMail?"Включено.":"Выключено."}</p>
    <div class="row2"><button class="btn ${o.planMail?"ghost":""}" type="button" data-act="planMail">${o.planMail?"Не присылать":"Присылать"}</button></div>
    <p class="hint">Для заказов в ключе WB нужна категория «Маркетплейс» (только чтение). Артикул WB должен быть указан в карточке изделия.</p></div>`}
@@ -1864,7 +1883,7 @@ function wToday(){
   const ord=c&&c.rows?c.rows.filter(o=>Date.parse(o.at)>=day.getTime()&&!cancelledBeforeShip(o.sup,o.wb)).length:null;
   const pl=S.products.some(p=>p.h>0)?todayPlan():null,low=lowCount("products"),lowPl=lowCount("plastics")+lowCount("parts");
   return `<section class="wdg"><div class="wdg-h"><span>Сегодня</span><span>${esc(new Date().toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"}))}</span></div><div class="wdg-tiles">
-   <button type="button" class="wdg-tile ${ord?"hot":""}" data-act="${S.ordCfg.on?"goSales":"goMore"}"><span>Заказы WB</span><b>${ord===null?"—":ord}</b><small>${ord===null?(S.ordCfg.on?"нет данных":"не подключено"):"шт за сегодня"}</small></button>
+   <button type="button" class="wdg-tile ${ord?"hot":""}" data-act="${SY.on?"fbs":"goMore"}"><span>Заказы WB</span><b>${ord===null?"—":ord}</b><small>${ord===null?(S.ordCfg.on?"нет данных":"не подключено"):"за сегодня · собрать"}</small></button>
    <button type="button" class="wdg-tile ${pl&&pl.items.length?"hot":""}" data-act="goPlan"><span>Печать</span><b>${pl?pl.items.reduce((a,i)=>a+i.n,0):"—"}</b><small>${pl&&pl.items.length?hm(pl.hoursUsed):"запаса хватает"}</small></button>
    <button type="button" class="wdg-tile ${low||lowPl?"warn":""}" data-act="wLow"><span>Пополнить</span><b>${low+lowPl}</b><small>${low?low+" изд.":""}${low&&lowPl?" · ":""}${lowPl?lowPl+" мат.":""}${!low&&!lowPl?"всё в норме":""}</small></button></div></section>`}
 function wMoney(){
@@ -1883,6 +1902,164 @@ function wSoon(){
    <p class="hint" style="margin:0">${L.length?"По скорости заказов WB × выкуп, иначе по плану продаж.":""}</p></section>`}
 function widgetsHtml(){const w=(S.ui.widgets||[]);return w.map(k=>k==="today"?wToday():k==="money"?wMoney():k==="soon"?wSoon():"").join("")}
 function widgetPickHtml(){const w=S.ui.widgets||[];return `<p>Виджеты на главном экране</p><div class="wdg-pick">${WIDGETS.map(([k,l,h])=>`<label><input type="checkbox" data-wdg="${k}" ${w.includes(k)?"checked":""}><span><b>${l}</b><small>${h}</small></span></label>`).join("")}</div>`}
+
+/* ================= сборка заказов FBS ================= */
+let fbsData=null;
+async function fbsCall(body){const d=await gPost(Object.assign({key:SY.key},body));if(!d||!d.ok)throw new Error(errText(d&&d.error||"Ошибка"));return d}
+async function openFbs(){
+  if(!SY.on){toast("Сначала включите синхронизацию с Google");return}
+  openSheet(`<h2>Сборка заказов FBS</h2><p class="sub" style="margin:0">Загружаю новые заказы из WB…</p>`);
+  try{fbsData=await fbsCall({action:"fbsList"});drawFbs()}
+  catch(e){openSheet(`<h2>Сборка заказов FBS</h2><p class="neg">${esc(e.message)}</p><div class="row2"><button type="button" class="btn" id="fb_x">Закрыть</button></div>`,s=>s.querySelector("#fb_x").onclick=closeSheet)}
+}
+function drawFbs(){
+  const d=fbsData,ord=d.orders.slice().sort((a,b)=>a.at<b.at?-1:1);
+  const by={};for(const o of ord){const p=matchProd(o);const k=p?p.id:"nm"+o.nm;(by[k]||(by[k]={p,o,list:[]})).list.push(o)}
+  const groups=Object.values(by).sort((a,b)=>b.list.length-a.list.length);
+  const pick=groups.map(g=>`<span>${esc(g.p?g.p.name:"Арт. "+g.o.nm)} × ${g.list.length}</span>`).join("");
+  const rows=groups.map(g=>`<div class="fbsgrp">${esc(g.p?g.p.name:"Арт. "+g.o.nm+(g.o.art?" · "+g.o.art:""))}${g.p?` <small class="hint">на складе ${n1(g.p.qty,0)} шт</small>`:""}</div>`+g.list.map(o=>{const mk=o.meta&&o.meta.length;return `<label class="fbsrow"><input type="checkbox" data-fo="${o.id}" ${mk?"":"checked"}><span>№ ${o.id}<small>${esc(new Date(o.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))} · ${rub(o.price)}${o.cargo>1?" · крупногабарит":""}${mk?` · <span class="neg">нужна маркировка (${esc(o.meta.join(", "))}) — соберите в кабинете WB</span>`:""}</small></span><span></span></label>`}).join("")).join("");
+  const sup=d.supplies;
+  openSheet(`<h2>Сборка заказов FBS</h2>
+   ${ord.length?`<p class="sub" style="margin:0">Новых заказов: <b>${ord.length}</b>. Что взять с полки:</p><div class="fbspick">${pick}</div>
+   <div>${rows}</div>
+   <label class="field"><span>Куда добавить</span><select id="fb_sup" class="inp"><option value="">Новая поставка</option>${sup.map(x=>`<option value="${esc(x.id)}">${esc(x.name||x.id)} · ${x.orders.length} шт · открыта</option>`).join("")}</select></label>
+   <div class="row2"><button type="button" class="btn main" id="fb_go">Собрать отмеченные</button></div>
+   <p class="hint">Заказы перейдут в статус «На сборке», затем откроются стикеры 58×40 для печати.</p>`:`<p class="sub" style="margin:0">Новых заказов нет.</p>`}
+   ${sup.length?`<section class="sec"><h2>Открытые поставки</h2>${sup.map(x=>`<div class="fbsrow"><span></span><span><b>${esc(x.name||x.id)}</b><small>${esc(x.id)} · ${x.orders.length} шт</small></span><span class="row2" style="flex-wrap:nowrap"><button type="button" class="btn small" data-fstk="${esc(x.id)}">Стикеры</button><button type="button" class="btn small main" data-fdel="${esc(x.id)}">В доставку</button></span></div>`).join("")}</section>`:""}
+   <div class="row2"><button type="button" class="btn ghost" id="fb_x">Закрыть</button></div>`,s=>{
+    s.querySelector("#fb_x").onclick=closeSheet;
+    const go=s.querySelector("#fb_go");
+    if(go)go.onclick=()=>{const ids=[...s.querySelectorAll("[data-fo]:checked")].map(i=>+i.dataset.fo);if(!ids.length){toast("Отметьте заказы");return}
+      const sid=s.querySelector("#fb_sup").value;
+      confirmSheet(`Собрать ${ids.length} шт?`,`Заказы будут добавлены ${sid?"в поставку "+esc(sid):"в новую поставку"} и перейдут в статус «На сборке». Отменить это из приложения нельзя.`,"Собрать",async()=>{
+        try{toast("Собираю…");const r=await fbsCall({action:"fbsAssemble",orders:ids,supplyId:sid});const st=await fbsCall({action:"fbsStickers",orders:ids});
+          showStickers(st.stickers,`Поставка ${r.supplyId}`);fbsData=await fbsCall({action:"fbsList"}).catch(()=>fbsData)}catch(e){toast(e.message)}},false)};
+    s.querySelectorAll("[data-fstk]").forEach(b=>b.onclick=async()=>{const x=sup.find(y=>y.id===b.dataset.fstk);if(!x.orders.length){toast("В поставке нет заказов");return}
+      try{b.disabled=true;const st=await fbsCall({action:"fbsStickers",orders:x.orders});showStickers(st.stickers,`Поставка ${x.id}`)}catch(e){toast(e.message)}finally{b.disabled=false}});
+    s.querySelectorAll("[data-fdel]").forEach(b=>b.onclick=()=>{const x=sup.find(y=>y.id===b.dataset.fdel);
+      confirmSheet("Передать поставку в доставку?",`${esc(x.name||x.id)}: ${x.orders.length} шт. После этого добавить в неё заказы будет нельзя. Появится QR-код поставки — его печатают и отдают вместе с коробкой.`,"Передать",async()=>{
+        try{const r=await fbsCall({action:"fbsDeliver",supplyId:x.id});showStickers(r.qr?[{id:x.id,file:r.qr,qr:true}]:[],`QR поставки ${x.id}`);fbsData=await fbsCall({action:"fbsList"}).catch(()=>fbsData)}catch(e){toast(e.message)}},false)});
+  });
+}
+function showStickers(list,title){
+  closeSheet();let v=$("#printView");if(v)v.remove();
+  v=document.createElement("div");v.id="printView";
+  const small=false;
+  v.innerHTML=`<div class="pvbar"><button type="button" class="btn main" id="pv_print">Печать</button><button type="button" class="btn" id="pv_close">Закрыть</button></div>
+   <p style="margin:0 0 10px;font:600 14px system-ui">${esc(title)} · ${list.length} шт. В окне печати выберите термопринтер, размер бумаги 58×40 мм, без полей. «Сохранить как PDF» тоже работает.</p>
+   ${list.length?list.map(x=>`<div class="stk${small?" s40":""}"><img alt="Стикер ${esc(x.id)}" src="data:image/png;base64,${x.file}"></div>`).join(""):`<p>WB не вернул изображение. Его можно скачать в кабинете WB.</p>`}`;
+  document.body.appendChild(v);
+  v.querySelector("#pv_close").onclick=()=>{v.remove();if(fbsData)drawFbs()};
+  v.querySelector("#pv_print").onclick=()=>window.print();
+}
+
+/* ================= импорт .3mf из Bambu Studio ================= */
+async function unzipEntry(buf,want){
+  const dv=new DataView(buf),u8=new Uint8Array(buf);let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-70000);i--)if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}
+  if(eocd<0)throw new Error("Это не файл .3mf (не архив)");
+  const n=dv.getUint16(eocd+10,true);let p=dv.getUint32(eocd+16,true);const dec=new TextDecoder();
+  for(let k=0;k<n;k++){
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),off=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+    if(!want(name))continue;
+    const lnl=dv.getUint16(off+26,true),lxl=dv.getUint16(off+28,true),data=u8.subarray(off+30+lnl+lxl,off+30+lnl+lxl+csize);
+    if(method===0)return dec.decode(data);
+    if(method!==8)throw new Error("Неизвестное сжатие в файле");
+    const ds=new DecompressionStream("deflate-raw");const out=await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();return dec.decode(out);
+  }
+  return null;
+}
+function parseSliceInfo(xml){
+  const doc=new DOMParser().parseFromString(xml,"application/xml");
+  const md=(el,k)=>{const m=[...el.children].find(c=>c.tagName==="metadata"&&c.getAttribute("key")===k);return m?m.getAttribute("value"):null};
+  return [...doc.getElementsByTagName("plate")].map(pl=>{
+    const objs=[...pl.getElementsByTagName("object")].filter(o=>o.getAttribute("skipped")!=="true");
+    const fil=[...pl.getElementsByTagName("filament")].map(f=>({id:f.getAttribute("id"),type:f.getAttribute("type")||"",color:(f.getAttribute("color")||"").slice(0,7),g:parseFloat(f.getAttribute("used_g"))||0})).filter(f=>f.g>0);
+    return {index:+md(pl,"index")||0,sec:parseFloat(md(pl,"prediction"))||0,weight:parseFloat(md(pl,"weight"))||fil.reduce((a,f)=>a+f.g,0),objects:objs.length,names:[...new Set(objs.map(o=>o.getAttribute("name")||""))].filter(Boolean),fil};
+  }).filter(p=>p.sec>0||p.fil.length);
+}
+function hexDist(a,b){const h=x=>{x=String(x||"").replace("#","");return x.length>=6?[0,2,4].map(i=>parseInt(x.substr(i,2),16)):null};const A=h(a),B=h(b);if(!A||!B)return 999;return Math.sqrt(A.reduce((s,v,i)=>s+(v-B[i])**2,0))}
+function guessPlastic(f){let best=null,bd=1e9;for(const m of S.plastics){const tp=String(m.type||"").toUpperCase()===String(f.type).toUpperCase()?0:120;const d=tp+hexDist(m.hex,f.color);if(d<bd){bd=d;best=m}}return best&&bd<200?best.id:(best?best.id:"")}
+async function import3mf(file){
+  let plates;
+  try{const buf=await file.arrayBuffer();const xml=await unzipEntry(buf,n=>/slice_info\.config$/i.test(n));
+    if(!xml){openSheet(`<h2>В файле нет данных нарезки</h2><p class="sub" style="margin:0">В Bambu Studio нажмите «Нарезать стол», затем сохраните проект (Ctrl+S) или «Файл → Экспорт → Экспорт нарезанного файла стола» (.gcode.3mf). Такой файл и загрузите.</p><div class="row2"><button type="button" class="btn" id="m_ok">Понятно</button></div>`,s=>s.querySelector("#m_ok").onclick=closeSheet);return}
+    plates=parseSliceInfo(xml)}
+  catch(e){toast("Не удалось прочитать файл: "+e.message);return}
+  if(!plates.length){toast("В файле не нашлось нарезанных столов");return}
+  let cur=0;
+  const opts=S.plastics.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+  const draw=()=>{const P=plates[cur],n=Math.max(1,P.objects);
+    openSheet(`<h2>Из Bambu Studio</h2>
+     ${plates.length>1?`<label class="field"><span>Стол</span><select id="m_pl" class="inp">${plates.map((p,i)=>`<option value="${i}" ${i===cur?"selected":""}>Стол ${p.index||i+1}: ${p.objects} шт · ${hm(p.sec/3600)} · ${n1(p.weight,1)} г</option>`).join("")}</select></label>`:""}
+     <div class="lines"><div class="ln"><span>Штук на столе</span><span>${P.objects}</span></div><div class="ln"><span>Время стола</span><span>${hm(P.sec/3600)}</span></div><div class="ln"><span>На 1 шт</span><span>${hm(P.sec/3600/n)}</span></div>${P.names.length?`<div class="ln"><span>Модели</span><span style="font-family:inherit;white-space:normal;text-align:right">${esc(P.names.slice(0,4).join(", "))}</span></div>`:""}</div>
+     <div class="box"><h3>Пластик на 1 шт</h3>${P.fil.map((f,i)=>`<div class="rec"><select class="inp" data-mf="${i}">${opts.length?opts.map(m=>`<option value="${m.id}" ${m.id===guessPlastic(f)?"selected":""}>${esc(m.name)}</option>`).join(""):`<option value="">нет пластика в «Материалах»</option>`}</select><div class="suf"><input class="inp" value="${dec(Math.round(f.g/n*100)/100)}" data-mg="${i}" inputmode="decimal"><i>г</i></div><span title="${esc(f.type+" "+f.color)}" style="width:26px;height:26px;border-radius:50%;background:${esc(f.color||"#888")};border:2px solid var(--line)"></span></div>`).join("")}
+     <p class="hint">Цвет справа — из Bambu Studio. Вес включает поддержки и продувку, разделён на ${n} шт.</p></div>
+     <p class="hint">Время стола, штуки и пластик заменят то, что сейчас в карточке.</p>
+     <div class="row2"><button type="button" class="btn main" id="m_ok">Подставить</button><button type="button" class="btn" id="m_no">Отмена</button></div>`,s=>{
+      const sel=s.querySelector("#m_pl");if(sel)sel.onchange=()=>{cur=+sel.value;draw()};
+      s.querySelector("#m_no").onclick=closeSheet;
+      s.querySelector("#m_ok").onclick=()=>{
+        if(P.fil.length&&!S.plastics.length){toast("Сначала добавьте пластик во вкладке «Материалы»");return}
+        readForm();const pl={};
+        P.fil.forEach((f,i)=>{const id=s.querySelector(`[data-mf="${i}"]`).value,g=num(s.querySelector(`[data-mg="${i}"]`).value);if(id&&g>0)pl[id]=(pl[id]||0)+g});
+        draft.plate=n;draft.plateH=P.sec/3600;draft.h=draft.plateH/n;
+        draft.rec.pl=Object.entries(pl).map(([id,q])=>({id,q:Math.round(q*100)/100}));if(Object.keys(pl).length)draft.g0=0;
+        closeSheet();renderProd();markDirty();toast("Данные из Bambu Studio подставлены. Проверьте и сохраните")};
+    })};
+  draw();
+}
+
+/* ================= план и факт по отчётам WB ================= */
+const FKEY="master3d_fact";let factCache=null;
+function factLoad(){if(factCache)return factCache;try{factCache=JSON.parse(localStorage.getItem(FKEY)||"null")}catch(e){}return factCache}
+async function factFetch(){if(!SY.on)return;try{const d=await gGet({action:"fact",key:SY.key,days:120});if(d&&d.ok&&Array.isArray(d.rows)){factCache={at:d.at,err:d.err||"",rows:d.rows,fetched:Date.now()};try{localStorage.setItem(FKEY,JSON.stringify(factCache))}catch(e){}}}catch(e){}}
+function factFor(p,weeks){
+  const c=factLoad();if(!c||!p||!String(p.sku||"").trim())return null;
+  const lim=new Date(Date.now()-(weeks||8)*7*86400000).toISOString().slice(0,10);
+  const a={sold:0,ret:0,dlv:0,back:0,rev:0,pay:0,log:0,stor:0,acc:0,pen:0,from:null,to:null};
+  for(const r of c.rows){if(r.to<lim||!r.nm)continue;const q=matchProd(r);if(!q||q.id!==p.id&&!(p.id==="__draft"&&String(p.sku).trim()===String(r.nm)))continue;
+    for(const k of ["sold","ret","dlv","back","rev","pay","log","stor","acc","pen"])a[k]+=r[k]||0;if(!a.from||r.from<a.from)a.from=r.from;if(!a.to||r.to>a.to)a.to=r.to}
+  const net=a.sold-a.ret;if(net<=0)return null;
+  return {net,G:a.rev/net,pay:a.pay/net,take:a.rev?1-a.pay/a.rev:0,log:a.log/net,other:(a.stor+a.acc+a.pen)/net,buy:a.dlv>=5?Math.max(0,(a.dlv-a.back)/a.dlv):null,dlv:a.dlv,from:a.from,to:a.to};
+}
+function factProfit(p,f){const P=S.p,w=p.wb||{},ads=(w.ads!=null?w.ads:P.ads)*f.G;return f.pay-f.log-f.other-ads-P.tax*f.G-cost(p).total}
+function drawFact(tmp,w,r){
+  const el=$("#factSec");if(!el)return;
+  const p=editId?Object.assign({},tmp,{id:editId}):tmp,f=w?factFor(p):null;
+  if(!f){el.hidden=!(w&&p.sku&&factLoad());if(!el.hidden)el.innerHTML=`<h2>План и факт</h2><p class="hint">За 8 недель в отчётах WB нет продаж по артикулу ${esc(p.sku)}. Факт обновляется раз в неделю: «Деньги» → «WB» → «Обновить».</p>`;return}
+  el.hidden=false;
+  const pPay=w.G-w.comm-w.U-w.L-w.acc,fQ=factProfit(p,f);
+  const row=(t,pl,fa,lowerBetter,fmt)=>{const d=fa-pl,bad=lowerBetter?d>Math.abs(pl)*0.1+0.5:d<-Math.abs(pl)*0.1-0.5,good=lowerBetter?d<-Math.abs(pl)*0.1-0.5:d>Math.abs(pl)*0.1+0.5;
+    return `<tr><td>${t}</td><td>${(fmt||rub)(pl)}</td><td class="${bad?"bad":good?"good":""}">${(fmt||rub)(fa)}</td></tr>`};
+  const hints=[];
+  if(f.log>w.L*1.12+1)hints.push(`Логистика на 1 продажу по факту <b>${rub(f.log,2)}</b>, в расчёте ${rub(w.L,2)}. <button type="button" class="undo" data-act="factSetLog">Подставить факт</button>`);
+  if(f.buy!=null&&Math.abs(f.buy-(p.wb&&p.wb.buy||S.p.buy))>=0.05)hints.push(`Выкуп по отчётам <b>${pct(f.buy,0)}</b> (из ${n1(f.dlv,0)} доставок), в карточке ${pct(p.wb&&p.wb.buy||S.p.buy,0)}. <button type="button" class="undo" data-act="factSetBuy">Подставить</button>`);
+  if(f.take>(w.comm+w.U)/w.G+0.02)hints.push(`WB забирает с цены <b>${pct(f.take)}</b>, в расчёте комиссия и эквайринг ${pct((w.comm+w.U)/w.G)}. Разница — скидки за счёт продавца, лояльность или изменение комиссии.`);
+  if(f.G<w.G*0.95)hints.push(`Средняя цена продажи <b>${rub(f.G)}</b> ниже расчётной ${rub(w.G)} — проверьте акции и скидки.`);
+  el.innerHTML=`<h2>План и факт <small>${esc(new Date(f.from).toLocaleDateString("ru-RU",{day:"numeric",month:"short"}))} – ${esc(new Date(f.to).toLocaleDateString("ru-RU",{day:"numeric",month:"short"}))} · ${n1(f.net,0)} шт</small></h2>
+   <div class="scroll"><table class="t fact"><thead><tr><th>На 1 продажу</th><th>Расчёт</th><th>Факт WB</th></tr></thead><tbody>
+   ${row("Цена после скидки",w.G,f.G)}
+   ${row("Комиссия и эквайринг",w.comm+w.U,f.G-f.pay,true)}
+   ${row("Логистика",w.L+w.acc,f.log,true)}
+   ${row("Хранение, приёмка, штрафы",0,f.other,true)}
+   ${row("Выплата WB до рекламы",pPay,f.pay-f.log-f.other)}
+   ${row("<b>Прибыль</b>",w.Q,fQ)}
+   </tbody></table></div>
+   ${hints.length?hints.map(h=>`<div class="verdict warn">${h}</div>`).join(""):`<div class="verdict ok">Факт совпадает с расчётом (разница меньше 10%).</div>`}
+   <p class="hint">Факт — из еженедельных отчётов WB о реализации за 8 недель. Реклама, налог и себестоимость в факте взяты из расчёта: в отчёте их нет.</p>`;
+}
+function factOverviewHtml(){
+  const c=factLoad();if(!c)return "";
+  const L=S.products.filter(p=>p.wb&&p.wb.pb>0&&p.h>0).map(p=>{const f=factFor(p);if(!f)return null;const w=calc(p).w;return w?{p,f,w,q:factProfit(p,f)}:null}).filter(Boolean).sort((a,b)=>(a.q-a.w.Q)-(b.q-b.w.Q));
+  const lim=new Date(Date.now()-56*86400000).toISOString().slice(0,10);
+  const free=c.rows.filter(r=>r.to>=lim&&!r.nm).reduce((a,r)=>a+r.stor+r.acc+r.pen,0);
+  return `<section class="sec"><h2>План и факт по изделиям <small>8 недель, отчёты WB</small></h2>
+   ${L.length?`<div class="scroll"><table class="t fact"><thead><tr><th>Изделие</th><th>Шт</th><th>Прибыль расчёт</th><th>Факт</th></tr></thead><tbody>${L.map(x=>{const d=x.q-x.w.Q,bad=d<-Math.abs(x.w.Q)*0.1-1;return `<tr><td><button type="button" class="undo" data-prod="${x.p.id}">${esc(x.p.name)}</button></td><td>${n1(x.f.net,0)}</td><td>${rub(x.w.Q)}</td><td class="${bad?"bad":d>Math.abs(x.w.Q)*0.1+1?"good":""}">${rub(x.q)}</td></tr>`}).join("")}</tbody></table></div>`:`<p class="hint">Пока нет продаж с артикулами в отчётах WB.</p>`}
+   ${free>0?`<p class="hint">Хранение и штрафы без артикула за 8 недель: ${rub(free)}.</p>`:""}
+   <p class="hint">Сверху — изделия, где факт хуже расчёта сильнее всего. Нажмите на название — в карточке будет разбор по строкам и подсказки.${c.err?` <span class="neg">${esc(c.err)}</span>`:""}</p></section>`;
+}
 
 /* ================= план ================= */
 function printHours(m){
@@ -1998,7 +2175,8 @@ document.querySelector(".tabs").addEventListener("click",e=>{
 });
 $("#fab").addEventListener("click",()=>{if(view==="products")openProd(null);else editMat(matTab,null)});
 $("#main").addEventListener("click",e=>{
-  if(view==="prod"){const a=e.target.closest("[data-act=hideNotice]");if(a){delete S.notice;save();a.closest(".banner").remove()}return}
+  if(view==="prod"){const fa=e.target.closest("[data-act=factSetLog],[data-act=factSetBuy]");if(fa){const f=factFor(draft);if(f){if(fa.dataset.act==="factSetLog")$("#f_lb").value=dec(Math.round(f.log*(draft.wb.buy||S.p.buy)*100)/100);else $("#f_buy").value=pin(f.buy);readForm();markDirty();update();toast("Подставлено. Не забудьте сохранить")}return}
+    const a=e.target.closest("[data-act=hideNotice]");if(a){delete S.notice;save();a.closest(".banner").remove()}return}
   const pr=e.target.closest("[data-prod]");if(pr){openProd(pr.dataset.prod);return}
   const row=e.target.closest(".row[data-c]");if(row){openMat(row.dataset.c,row.dataset.id);return}
   const u=e.target.closest("[data-undo]");if(u){undo(u.dataset.undo);return}
@@ -2033,6 +2211,8 @@ $("#main").addEventListener("click",e=>{
   if(act==="ordNow"){a.disabled=true;a.textContent="Проверяю…";ordersFetch(true).then(r=>{toast(r&&r.err?r.err:r&&r.n?`Списано заказов: ${r.n}`:"Новых заказов нет");renderMain()})}
   if(act==="planMail"){S.ordCfg.planMail=!S.ordCfg.planMail;save();renderMain();toast(S.ordCfg.planMail?"План будет приходить в 17:30":"Письма с планом выключены")}
   if(act==="goPlan"){view="plan";salesTab="plan";render()}
+  if(act==="fbs")openFbs();
+  if(act==="factSetLog"||act==="factSetBuy"){const f=factFor(draft);if(f){if(act==="factSetLog"){$("#f_lb").value=dec(Math.round(f.log*(draft.wb.buy||S.p.buy)*100)/100)}else{$("#f_buy").value=pin(f.buy)}readForm();markDirty();update();toast("Подставлено. Не забудьте сохранить")}}
   if(act==="goCash"){view="plan";salesTab="cash";render()}
   if(act==="goSales"){view="plan";salesTab="sales";render()}
   if(act==="wLow"){if(lowCount("products")){prodSort="attention";onlyLow=true;renderMain()}else if(lowCount("plastics")||lowCount("parts")){view="materials";matTab=lowCount("plastics")?"plastics":"parts";onlyLow=true;render()}else toast("Всё в норме")}
@@ -2073,7 +2253,7 @@ $("#main").addEventListener("input",e=>{
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
 applyTheme();
-window.__m={buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
+window.__m={parseSliceInfo,unzipEntry,factFor,factProfit,fbsCall,openFbs,buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
 document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
