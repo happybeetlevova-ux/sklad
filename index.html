@@ -213,6 +213,8 @@
 #printView .stk img{max-width:100%;max-height:100%;image-rendering:pixelated}
 @media print{body>*:not(#printView){display:none!important}#printView{position:static;padding:0}#printView .pvbar{display:none}#printView .stk{border:0;margin:0}@page{margin:0}}
 .fact td.bad{color:var(--bad)}.fact td.good{color:var(--ok)}
+
+@media (min-width:1000px){.wrap{max-width:920px}.tabs .in{max-width:920px}html .fab{right:calc(50% - 444px)}[data-style="graphite"] .tabs{left:50%;right:auto;width:888px;transform:translateX(-50%)}[data-style="graphite"] .savebar{left:50%;right:auto;width:888px;transform:translateX(-50%)}.sheet{max-width:640px;border-radius:22px;margin-bottom:24px}}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -1273,7 +1275,10 @@ async function syncCheck(){
     const d=await gGet({action:"meta",key:SY.key});
     if(!d.ok){SY.err=errText(d.error);saveSync();cloudDot();return}
     SY.err="";
-    if(d.rev>SY.base&&d.device!==SY.device){syncConflict=d;if(view!=="prod")renderMain()}
+    if(d.rev>SY.base&&d.device!==SY.device){
+      /* на этом устройстве нет несохранённых изменений — просто забираем свежие данные с другого устройства */
+      if(SY.localRev<=SY.pushedRev&&!(view==="prod"&&dirty)&&$("#back").hidden){try{const v0=view;await syncPull();view=v0==="prod"?"products":v0;render();toast("Загружены изменения с другого устройства");saveSync();cloudDot();return}catch(e){}}
+      syncConflict=d;if(view!=="prod")renderMain()}
     else{if(SY.localRev>SY.pushedRev)syncPush();ordersFetch();const fc=factLoad();if(!fc||Date.now()-fc.fetched>12*3600000)factFetch().then(()=>{if(view==='plan'&&salesTab==='sales')renderMain()})}
   }catch(e){SY.err=e.message}
   saveSync();cloudDot();
@@ -2269,6 +2274,7 @@ applyTheme();
 window.__m={parseSliceInfo,unzipEntry,factFor,factProfit,fbsCall,openFbs,buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
+setInterval(()=>{if(SY.on&&document.visibilityState==="visible")syncCheck()},5*60000);
 document.addEventListener("visibilitychange",()=>{if(!SY.on)return;if(document.visibilityState==="hidden"){if(SY.localRev>SY.pushedRev){clearTimeout(syncTimer);syncPush()}}else syncCheck()});
 })();
 </script>
