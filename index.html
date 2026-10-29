@@ -1959,7 +1959,8 @@ function showStickers(list,title){
 }
 
 /* ================= импорт .3mf из Bambu Studio ================= */
-async function unzipEntry(buf,want){
+async function unzipEntry(buf,want){const r=await unzipAll(buf,want,true);const k=Object.keys(r)[0];return k?r[k]:null}
+async function unzipAll(buf,want,first){const res={};
   const dv=new DataView(buf),u8=new Uint8Array(buf);let eocd=-1;
   for(let i=u8.length-22;i>=Math.max(0,u8.length-70000);i--)if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}
   if(eocd<0)throw new Error("Это не файл .3mf (не архив)");
@@ -1969,11 +1970,26 @@ async function unzipEntry(buf,want){
     const name=dec.decode(u8.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
     if(!want(name))continue;
     const lnl=dv.getUint16(off+26,true),lxl=dv.getUint16(off+28,true),data=u8.subarray(off+30+lnl+lxl,off+30+lnl+lxl+csize);
-    if(method===0)return dec.decode(data);
-    if(method!==8)throw new Error("Неизвестное сжатие в файле");
-    const ds=new DecompressionStream("deflate-raw");const out=await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();return dec.decode(out);
+    if(method===0)res[name]=dec.decode(data);
+    else if(method===8){const ds=new DecompressionStream("deflate-raw");res[name]=dec.decode(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer())}
+    else throw new Error("Неизвестное сжатие в файле");
+    if(first)return res;
   }
-  return null;
+  return res;
+}
+/* Проект без результата нарезки: берём раскладку (штуки на столах) и пластик из настроек проекта */
+function parseLayout(files){
+  const ms=files["Metadata/model_settings.config"],ps=files["Metadata/project_settings.config"];if(!ms)return [];
+  const doc=new DOMParser().parseFromString(ms,"application/xml");
+  const md=(el,k)=>{const m=[...el.children].find(c=>c.tagName==="metadata"&&c.getAttribute("key")===k);return m?m.getAttribute("value"):null};
+  const ext={},names={};for(const o of doc.querySelectorAll("config > object")){ext[o.getAttribute("id")]=+md(o,"extruder")||1;names[o.getAttribute("id")]=md(o,"name")||""}
+  let types=[],cols=[];try{const j=JSON.parse(ps||"{}");types=j.filament_type||[];cols=j.filament_colour||[]}catch(e){}
+  return [...doc.getElementsByTagName("plate")].map(pl=>{
+    const inst=[...pl.getElementsByTagName("model_instance")].map(mi=>md(mi,"object_id"));
+    const used=[...new Set(inst.map(id=>ext[id]||1))];
+    return {index:+md(pl,"plater_id")||0,sec:0,weight:0,objects:inst.length,names:[...new Set(inst.map(id=>names[id]))].filter(Boolean),
+      fil:used.map(u=>({id:String(u),type:types[u-1]||"",color:String(cols[u-1]||"").slice(0,7),g:0})),noSlice:true};
+  }).filter(p=>p.objects>0);
 }
 function parseSliceInfo(xml){
   const doc=new DOMParser().parseFromString(xml,"application/xml");
@@ -1988,29 +2004,35 @@ function hexDist(a,b){const h=x=>{x=String(x||"").replace("#","");return x.lengt
 function guessPlastic(f){let best=null,bd=1e9;for(const m of S.plastics){const tp=String(m.type||"").toUpperCase()===String(f.type).toUpperCase()?0:120;const d=tp+hexDist(m.hex,f.color);if(d<bd){bd=d;best=m}}return best&&bd<200?best.id:(best?best.id:"")}
 async function import3mf(file){
   let plates;
-  try{const buf=await file.arrayBuffer();const xml=await unzipEntry(buf,n=>/slice_info\.config$/i.test(n));
-    if(!xml){openSheet(`<h2>В файле нет данных нарезки</h2><p class="sub" style="margin:0">В Bambu Studio нажмите «Нарезать стол», затем сохраните проект (Ctrl+S) или «Файл → Экспорт → Экспорт нарезанного файла стола» (.gcode.3mf). Такой файл и загрузите.</p><div class="row2"><button type="button" class="btn" id="m_ok">Понятно</button></div>`,s=>s.querySelector("#m_ok").onclick=closeSheet);return}
-    plates=parseSliceInfo(xml)}
+  try{const buf=await file.arrayBuffer();const files=await unzipAll(buf,n=>/(slice_info|model_settings|project_settings)\.config$/i.test(n));
+    plates=files["Metadata/slice_info.config"]?parseSliceInfo(files["Metadata/slice_info.config"]):[];
+    if(!plates.length)plates=parseLayout(files)}
   catch(e){toast("Не удалось прочитать файл: "+e.message);return}
-  if(!plates.length){toast("В файле не нашлось нарезанных столов");return}
+  if(!plates.length){openSheet(`<h2>В файле нет столов с моделями</h2><p class="sub" style="margin:0">Похоже, это не проект Bambu Studio. Загрузите файл .3mf, сохранённый из Bambu Studio.</p><div class="row2"><button type="button" class="btn" id="m_ok">Понятно</button></div>`,s=>s.querySelector("#m_ok").onclick=closeSheet);return}
   let cur=0;
   const opts=S.plastics.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
   const draw=()=>{const P=plates[cur],n=Math.max(1,P.objects);
     openSheet(`<h2>Из Bambu Studio</h2>
-     ${plates.length>1?`<label class="field"><span>Стол</span><select id="m_pl" class="inp">${plates.map((p,i)=>`<option value="${i}" ${i===cur?"selected":""}>Стол ${p.index||i+1}: ${p.objects} шт · ${hm(p.sec/3600)} · ${n1(p.weight,1)} г</option>`).join("")}</select></label>`:""}
-     <div class="lines"><div class="ln"><span>Штук на столе</span><span>${P.objects}</span></div><div class="ln"><span>Время стола</span><span>${hm(P.sec/3600)}</span></div><div class="ln"><span>На 1 шт</span><span>${hm(P.sec/3600/n)}</span></div>${P.names.length?`<div class="ln"><span>Модели</span><span style="font-family:inherit;white-space:normal;text-align:right">${esc(P.names.slice(0,4).join(", "))}</span></div>`:""}</div>
-     <div class="box"><h3>Пластик на 1 шт</h3>${P.fil.map((f,i)=>`<div class="rec"><select class="inp" data-mf="${i}">${opts.length?opts.map(m=>`<option value="${m.id}" ${m.id===guessPlastic(f)?"selected":""}>${esc(m.name)}</option>`).join(""):`<option value="">нет пластика в «Материалах»</option>`}</select><div class="suf"><input class="inp" value="${dec(Math.round(f.g/n*100)/100)}" data-mg="${i}" inputmode="decimal"><i>г</i></div><span title="${esc(f.type+" "+f.color)}" style="width:26px;height:26px;border-radius:50%;background:${esc(f.color||"#888")};border:2px solid var(--line)"></span></div>`).join("")}
-     <p class="hint">Цвет справа — из Bambu Studio. Вес включает поддержки и продувку, разделён на ${n} шт.</p></div>
+     ${plates.length>1?`<label class="field"><span>Стол</span><select id="m_pl" class="inp">${plates.map((p,i)=>`<option value="${i}" ${i===cur?"selected":""}>Стол ${p.index||i+1}: ${p.objects} шт${p.noSlice?"":` · ${hm(p.sec/3600)} · ${n1(p.weight,1)} г`}</option>`).join("")}</select></label>`:""}
+     ${P.noSlice?`<div class="verdict warn">В файле только раскладка — Bambu Studio не сохраняет в проект время и вес. Впишите их с экрана нарезки (справа внизу: «Общее время» и «Вес»), или загрузите файл из «Файл → Экспорт → Экспорт нарезанного файла стола» — тогда всё заполнится само.</div>
+     <div class="grid2"><label class="field"><span>Время стола</span><input id="m_t" class="inp" value="${draft.plateH>0&&draft.plate===n?dec(draft.plateH):""}" placeholder="например 3:25"><small>«3:25» или «3ч 25м»</small></label><label class="field"><span>Вес стола</span><div class="suf"><input id="m_w" class="inp" inputmode="decimal" placeholder="например 96,4"><i>г</i></div></label></div>`:""}
+     <div class="lines"><div class="ln"><span>Штук на столе</span><span>${P.objects}</span></div>${P.noSlice?"":`<div class="ln"><span>Время стола</span><span>${hm(P.sec/3600)}</span></div><div class="ln"><span>На 1 шт</span><span>${hm(P.sec/3600/n)}</span></div>`}${P.names.length?`<div class="ln"><span>Модели</span><span style="font-family:inherit;white-space:normal;text-align:right">${esc(P.names.slice(0,4).join(", "))}</span></div>`:""}</div>
+     <div class="box"><h3>Пластик на 1 шт</h3>${P.fil.map((f,i)=>`<div class="rec"><select class="inp" data-mf="${i}">${opts.length?opts.map(m=>`<option value="${m.id}" ${m.id===guessPlastic(f)?"selected":""}>${esc(m.name)}</option>`).join(""):`<option value="">нет пластика в «Материалах»</option>`}</select><div class="suf"><input class="inp" value="${f.g>0?dec(Math.round(f.g/n*100)/100):""}" data-mg="${i}" inputmode="decimal" placeholder="${P.noSlice?"из веса":"0"}"><i>г</i></div><span title="${esc(f.type+" "+f.color)}" style="width:26px;height:26px;border-radius:50%;background:${esc(f.color||"#888")};border:2px solid var(--line)"></span></div>`).join("")}
+     <p class="hint">Цвет справа — из Bambu Studio. ${P.noSlice?(P.fil.length>1?"Разложите вес стола по пластикам вручную.":"Вес стола разделится на "+n+" шт."):"Вес включает поддержки и продувку, разделён на "+n+" шт."}</p></div>
      <p class="hint">Время стола, штуки и пластик заменят то, что сейчас в карточке.</p>
      <div class="row2"><button type="button" class="btn main" id="m_ok">Подставить</button><button type="button" class="btn" id="m_no">Отмена</button></div>`,s=>{
       const sel=s.querySelector("#m_pl");if(sel)sel.onchange=()=>{cur=+sel.value;draw()};
       s.querySelector("#m_no").onclick=closeSheet;
       s.querySelector("#m_ok").onclick=()=>{
         if(P.fil.length&&!S.plastics.length){toast("Сначала добавьте пластик во вкладке «Материалы»");return}
+        let sec=P.sec;
+        if(P.noSlice){const t=parseTime(s.querySelector("#m_t").value),wt=num(s.querySelector("#m_w").value);
+          if(!(t>0)){toast("Впишите время стола из Bambu Studio");return}sec=t*3600;
+          if(wt>0&&P.fil.length===1){const g0=s.querySelector('[data-mg="0"]');if(!(num(g0.value)>0))g0.value=dec(Math.round(wt/n*100)/100)}}
         readForm();const pl={};
         P.fil.forEach((f,i)=>{const id=s.querySelector(`[data-mf="${i}"]`).value,g=num(s.querySelector(`[data-mg="${i}"]`).value);if(id&&g>0)pl[id]=(pl[id]||0)+g});
-        draft.plate=n;draft.plateH=P.sec/3600;draft.h=draft.plateH/n;
-        draft.rec.pl=Object.entries(pl).map(([id,q])=>({id,q:Math.round(q*100)/100}));if(Object.keys(pl).length)draft.g0=0;
+        draft.plate=n;draft.plateH=sec/3600;draft.h=draft.plateH/n;
+        if(Object.keys(pl).length){draft.rec.pl=Object.entries(pl).map(([id,q])=>({id,q:Math.round(q*100)/100}));draft.g0=0}
         closeSheet();renderProd();markDirty();toast("Данные из Bambu Studio подставлены. Проверьте и сохраните")};
     })};
   draw();
