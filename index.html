@@ -167,6 +167,37 @@
 [data-style="soft"] .res .good,[data-style="soft"] .res .poor,[data-style="soft"] .res .neg{color:inherit}
 [data-style="soft"] .sheet{border-radius:30px 30px 0 0}
 [data-style="soft"] .wbbar{padding:12px 14px}
+
+.brand>div{min-width:0}
+.brand h1{white-space:nowrap}
+.pill{max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+[data-style="graphite"] .brand h1{font-size:clamp(15px,4.6vw,19px)}
+/* виджеты */
+.wdg{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;color:inherit}
+.wdg-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:600 12px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.wdg-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wdg-tile{border:0;background:var(--sunk);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:2px;text-align:left;color:inherit;min-width:0}
+.wdg-tile b{font:700 24px/1.1 var(--f-num);font-variant-numeric:tabular-nums}
+.wdg-tile span{font-size:11.5px;color:var(--muted);font-weight:600}
+.wdg-tile small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wdg-tile.hot b{color:var(--accent)} .wdg-tile.warn b{color:var(--warn)}
+.wdg-big{font:700 30px/1.05 var(--f-num);font-variant-numeric:tabular-nums}
+.wdg-sub{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.wdg-sub b{font-family:var(--f-num);color:var(--fg)}
+.wdg-bar{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}.wdg-bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.wdg-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border:0;background:none;padding:0;text-align:left;color:inherit;width:100%}
+.wdg-row b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wdg-row em{font:700 13px var(--f-num);font-style:normal;white-space:nowrap}
+.wdg-row .wdg-bar{grid-column:1/-1;height:6px}
+.wdg-row.bad em{color:var(--bad)}.wdg-row.bad .wdg-bar i{background:var(--bad)}.wdg-row.warn em{color:var(--warn)}.wdg-row.warn .wdg-bar i{background:var(--warn)}
+.wdg-pick{display:flex;flex-direction:column;gap:8px}
+.wdg-pick label{display:flex;gap:10px;align-items:flex-start;font-size:14px}.wdg-pick small{display:block;color:var(--muted);font-size:12px}
+[data-style="graphite"] .wdg{border:1px solid rgba(255,255,255,.06);border-radius:22px;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 14%,#16191e),#111317 70%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+[data-style="graphite"] .wdg-tile{background:rgba(255,255,255,.04);border-radius:16px}
+[data-style="graphite"] .wdg-big{color:var(--accent);text-shadow:0 0 24px color-mix(in srgb,var(--accent) 40%,transparent)}
+[data-style="graphite"] .wdg-bar i{box-shadow:0 0 10px var(--accent)}
+[data-style="draft"] .wdg{border-radius:3px;border:1.5px solid var(--line)}[data-style="draft"] .wdg-tile{border-radius:2px}[data-style="draft"] .wdg-bar,[data-style="draft"] .wdg-bar i{border-radius:0}
+[data-style="soft"] .wdg{border:0;border-radius:26px;box-shadow:0 2px 14px rgba(90,65,40,.07)}[data-style="soft"] .wdg-tile{border-radius:18px}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -399,7 +430,7 @@ function valid(d){return d&&d.v===2&&Array.isArray(d.products)&&Array.isArray(d.
 function normName(s){return String(s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
 function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true,plate:1,plateH:0,links:[]},o||{})}
 const WBCFG_DEF={url:"",wh:"",model:"fbs",last:""};
-const UI_DEF={accent:"teal",mode:"auto",icon:"nozzle",iconColor:"auto",style:"graphite"};
+const UI_DEF={accent:"teal",mode:"auto",icon:"nozzle",iconColor:"auto",style:"graphite",widgets:["today","money","soon"]};
 const STYLES=[["classic","Классика"],["draft","Чертёж"],["graphite","Графит"],["soft","Мягкий"]];
 function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(!Array.isArray(d.buyers)){d.buyers=[];
   d.deals.slice().sort((a,b)=>a.t-b.t).forEach(x=>{if(!x.buyer)return;let b=d.buyers.find(y=>y.name.toLowerCase()===String(x.buyer).toLowerCase());
@@ -605,10 +636,11 @@ function productsHtml(){
   all.sort((a,b)=>keys[prodSort](a,b)||a.x.name.localeCompare(b.x.name,"ru"));
   const chip=(k,t)=>`<button type="button" class="chip ${prodSort===k&&!(k==="attention"&&onlyLow)?"on":""}" data-sort="${k}">${t}</button>`;
   const head=`<div class="bar"><div class="chips">${chip("attention","Остаток")}${chip("hour","₽/час")}${chip("margin","Маржа")}${chip("name","А–Я")}<button type="button" class="chip ${onlyLow?"on":""}" data-act="onlyLow">Пополнить</button></div></div>`;
-  const wbb=wbBarHtml()+todayBarHtml();
-  if(!S.products.length)return kp+wbb+`<div class="empty"><b>Изделий пока нет</b>Нажмите «+», чтобы добавить первое.</div>`;
-  if(!all.length)return kp+wbb+head+`<div class="empty"><b>Ничего не найдено</b>${onlyLow?"Всё в норме.":"Попробуйте другое слово."}</div>`;
-  return kp+wbb+head+`<div class="list">${all.map(({x,r})=>{
+  const wbb=wbBarHtml()+(S.ui.widgets&&S.ui.widgets.includes("today")?"":todayBarHtml());
+  const wg=q?"":widgetsHtml();
+  if(!S.products.length)return wg+kp+wbb+`<div class="empty"><b>Изделий пока нет</b>Нажмите «+», чтобы добавить первое.</div>`;
+  if(!all.length)return wg+kp+wbb+head+`<div class="empty"><b>Ничего не найдено</b>${onlyLow?"Всё в норме.":"Попробуйте другое слово."}</div>`;
+  return wg+kp+wbb+head+`<div class="list">${all.map(({x,r})=>{
     const st=state(x),w=r.w,pl=R.m[x.id],[tc]=hourTag(w?w.perH:NaN);
     const eco=w?`${n1(w.perH,0)} ₽/ч${pl?" · #"+pl:""} · маржа ${pct(w.margin)}`:x.h>0?"нет цены WB":"не указано время печати";
     return `<button type="button" class="row" data-prod="${x.id}"><span class="lead"><span class="stripe ${st}"></span></span><span class="info"><b>${esc(x.name)}</b><small>себест. ${rub(r.c.total)} · <span style="color:var(--${tc==="ok"?"ok":tc==="warn"?"warn":tc==="bad"?"bad":tc==="mid"?"accent":"muted"})">${eco}</span></small></span><span class="qty"><b>${n1(x.qty)}<small>шт</small></b><span class="tag ${st}">${STATE_TXT[st]}</span></span></button>`}).join("")}</div>
@@ -1163,6 +1195,7 @@ function themeCardHtml(){
   const u=S.ui;
   return `<div class="card"><h2>Оформление</h2><p>Стиль</p>
    <div class="seg four">${STYLES.map(([k,l])=>`<button type="button" data-uistyle="${k}" class="${(u.style||"classic")===k?"on":""}">${l}</button>`).join("")}</div>
+   ${widgetPickHtml()}
    <p>Цвет кнопок и акцентов</p>
    <div class="swatches">${ACCENTS.map(([k,l,c])=>`<button type="button" class="swatch ${u.accent===k?"on":""}" style="background:${c}" data-accent="${k}" aria-label="${l}" title="${l}">${u.accent===k?"✓":""}</button>`).join("")}</div>
    <p>Ярлык на экране телефона</p>
@@ -1824,6 +1857,33 @@ function ordCardHtml(){
    <div class="row2"><button class="btn ${o.planMail?"ghost":""}" type="button" data-act="planMail">${o.planMail?"Не присылать":"Присылать"}</button></div>
    <p class="hint">Для заказов в ключе WB нужна категория «Маркетплейс» (только чтение). Артикул WB должен быть указан в карточке изделия.</p></div>`}
 
+/* ================= виджеты главного экрана ================= */
+const WIDGETS=[["today","Сегодня","заказы WB, печать, что пополнить"],["money","Деньги за месяц","результат кассы, окупаемость, налог"],["soon","Скоро закончится","3 изделия, которые кончатся раньше всех"]];
+function wToday(){
+  const c=ordLoad(),day=new Date();day.setHours(0,0,0,0);
+  const ord=c&&c.rows?c.rows.filter(o=>Date.parse(o.at)>=day.getTime()&&!cancelledBeforeShip(o.sup,o.wb)).length:null;
+  const pl=S.products.some(p=>p.h>0)?todayPlan():null,low=lowCount("products"),lowPl=lowCount("plastics")+lowCount("parts");
+  return `<section class="wdg"><div class="wdg-h"><span>Сегодня</span><span>${esc(new Date().toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"}))}</span></div><div class="wdg-tiles">
+   <button type="button" class="wdg-tile ${ord?"hot":""}" data-act="${S.ordCfg.on?"goSales":"goMore"}"><span>Заказы WB</span><b>${ord===null?"—":ord}</b><small>${ord===null?(S.ordCfg.on?"нет данных":"не подключено"):"шт за сегодня"}</small></button>
+   <button type="button" class="wdg-tile ${pl&&pl.items.length?"hot":""}" data-act="goPlan"><span>Печать</span><b>${pl?pl.items.reduce((a,i)=>a+i.n,0):"—"}</b><small>${pl&&pl.items.length?hm(pl.hoursUsed):"запаса хватает"}</small></button>
+   <button type="button" class="wdg-tile ${low||lowPl?"warn":""}" data-act="wLow"><span>Пополнить</span><b>${low+lowPl}</b><small>${low?low+" изд.":""}${low&&lowPl?" · ":""}${lowPl?lowPl+" мат.":""}${!low&&!lowPl?"всё в норме":""}</small></button></div></section>`}
+function wMoney(){
+  const m=curM(),c=monthCash(m),pb=payback(),td=taxDue();
+  const pct_=pb.invest?Math.min(1,pb.pct):0;
+  return `<button type="button" class="wdg" data-act="goCash"><div class="wdg-h"><span>Деньги · ${esc(mLabel(m))}</span><span>касса</span></div>
+   <div class="wdg-big ${c.net<0?"neg":""}">${c.net>0?"+":""}${rub(c.net)}</div>
+   <div class="wdg-sub"><span>приход <b>${rub(c.inn+(c.est||0))}</b></span><span>расход <b>${rub(c.out)}</b></span>${c.est?`<span>WB ≈ оценка</span>`:""}</div>
+   ${pb.invest?`<div class="wdg-sub"><span>Окупаемость <b>${pct(pb.pct,0)}</b></span><span>${pb.left>0?`осталось ${rub(pb.left)}${pb.avg>0?` · ≈ ${n1(Math.ceil(pb.left/pb.avg),0)} мес.`:""}`:"окупилось ✓"}</span></div><div class="wdg-bar"><i style="width:${(pct_*100).toFixed(1)}%"></i></div>`:`<div class="wdg-sub"><span>Добавьте покупку принтера в кассу — появится окупаемость</span></div>`}
+   ${td?`<div class="wdg-sub"><span style="color:var(--warn)">Налог за ${esc(mLabel(td.m).toLowerCase())}: <b style="color:var(--warn)">${rub(td.tax)}</b> ${esc(dueText(td.m))}</span></div>`:""}</button>`}
+function wSoon(){
+  const R=ordRate().rate,L=S.products.filter(p=>p.qty<=0?p.min>0||R[p.id]>0:R[p.id]>0||(p.min>0&&p.qty<p.min)).map(p=>{const r=R[p.id]||0,d=r>0?Math.max(0,p.qty)/r:p.qty<p.min?0:Infinity;return {p,d,r}}).sort((a,b)=>a.d-b.d).slice(0,3);
+  const span=S.p.stockDays||14;
+  return `<section class="wdg"><div class="wdg-h"><span>Скоро закончится</span><span>запас ${n1(span,0)} дн.</span></div>
+   ${L.length?L.map(({p,d,r})=>{const cls=d<3?"bad":d<7?"warn":"";return `<button type="button" class="wdg-row ${cls}" data-prod="${p.id}"><b>${esc(p.name)}</b><em>${p.qty<=0?"нет":isFinite(d)?(d<1?"< 1 дн.":"≈ "+n1(Math.floor(d),0)+" дн."):"ниже мин."}</em><span class="wdg-bar"><i style="width:${Math.max(3,Math.min(100,(isFinite(d)?d:0)/span*100)).toFixed(0)}%"></i></span></button>`}).join(""):`<p class="hint">Продаж за 30 дней нет или всего хватает надолго.</p>`}
+   <p class="hint" style="margin:0">${L.length?"По скорости заказов WB × выкуп, иначе по плану продаж.":""}</p></section>`}
+function widgetsHtml(){const w=(S.ui.widgets||[]);return w.map(k=>k==="today"?wToday():k==="money"?wMoney():k==="soon"?wSoon():"").join("")}
+function widgetPickHtml(){const w=S.ui.widgets||[];return `<p>Виджеты на главном экране</p><div class="wdg-pick">${WIDGETS.map(([k,l,h])=>`<label><input type="checkbox" data-wdg="${k}" ${w.includes(k)?"checked":""}><span><b>${l}</b><small>${h}</small></span></label>`).join("")}</div>`}
+
 /* ================= план ================= */
 function printHours(m){
   let h=0,def=0;
@@ -1973,6 +2033,9 @@ $("#main").addEventListener("click",e=>{
   if(act==="ordNow"){a.disabled=true;a.textContent="Проверяю…";ordersFetch(true).then(r=>{toast(r&&r.err?r.err:r&&r.n?`Списано заказов: ${r.n}`:"Новых заказов нет");renderMain()})}
   if(act==="planMail"){S.ordCfg.planMail=!S.ordCfg.planMail;save();renderMain();toast(S.ordCfg.planMail?"План будет приходить в 17:30":"Письма с планом выключены")}
   if(act==="goPlan"){view="plan";salesTab="plan";render()}
+  if(act==="goCash"){view="plan";salesTab="cash";render()}
+  if(act==="goSales"){view="plan";salesTab="sales";render()}
+  if(act==="wLow"){if(lowCount("products")){prodSort="attention";onlyLow=true;renderMain()}else if(lowCount("plastics")||lowCount("parts")){view="materials";matTab=lowCount("plastics")?"plastics":"parts";onlyLow=true;render()}else toast("Всё в норме")}
   if(act==="opAdd")openOpForm();
   if(act==="buyers")openBuyers();
   if(act==="opWB")openOpForm({type:"in",cat:"Выплата WB"});
@@ -1995,6 +2058,7 @@ $("#main").addEventListener("click",e=>{
 });
 $("#main").addEventListener("change",e=>{
   if(e.target.id==="wb_url"){const nu=e.target.value.trim();if(nu!==S.wbcfg.url){S.wbcfg.url=nu;save();renderMain()}}
+  if(e.target.dataset&&e.target.dataset.wdg){const k=e.target.dataset.wdg;let w=(S.ui.widgets||[]).filter(x=>x!==k);if(e.target.checked){w.push(k);w=WIDGETS.map(x=>x[0]).filter(x=>w.includes(x))}S.ui.widgets=w;save();toast(e.target.checked?"Виджет добавлен на главный экран":"Виджет убран")}
   if(e.target.id==="ui_iconcolor"){S.ui.iconColor=e.target.value;save();applyIcon();renderMain();toast("Цвет ярлыка выбран")}
   if(e.target.id==="tax_bonus"){const v=num(e.target.value);S.tax.bonus=isFinite(v)&&v>=0?v:null;save();renderMain();toast("Остаток вычета сохранён")}
   if(e.target.id==="wb_wh"){S.wbcfg.wh=e.target.value;save();toast("Склад выбран. Тариф запомнится при следующем обновлении")}
