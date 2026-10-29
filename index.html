@@ -1274,7 +1274,7 @@ async function syncCheck(){
     if(!d.ok){SY.err=errText(d.error);saveSync();cloudDot();return}
     SY.err="";
     if(d.rev>SY.base&&d.device!==SY.device){syncConflict=d;if(view!=="prod")renderMain()}
-    else{if(SY.localRev>SY.pushedRev)syncPush();ordersFetch()}
+    else{if(SY.localRev>SY.pushedRev)syncPush();ordersFetch();const fc=factLoad();if(!fc||Date.now()-fc.fetched>12*3600000)factFetch().then(()=>{if(view==='plan'&&salesTab==='sales')renderMain()})}
   }catch(e){SY.err=e.message}
   saveSync();cloudDot();
 }
@@ -2014,7 +2014,12 @@ async function import3mf(file){
 /* ================= план и факт по отчётам WB ================= */
 const FKEY="master3d_fact";let factCache=null;
 function factLoad(){if(factCache)return factCache;try{factCache=JSON.parse(localStorage.getItem(FKEY)||"null")}catch(e){}return factCache}
-async function factFetch(){if(!SY.on)return;try{const d=await gGet({action:"fact",key:SY.key,days:120});if(d&&d.ok&&Array.isArray(d.rows)){factCache={at:d.at,err:d.err||"",rows:d.rows,fetched:Date.now()};try{localStorage.setItem(FKEY,JSON.stringify(factCache))}catch(e){}}}catch(e){}}
+async function factFetch(){if(!SY.on)return;let fc;
+  try{const d=await gGet({action:"fact",key:SY.key,days:120});
+    if(d&&d.ok&&Array.isArray(d.rows))fc={at:d.at,err:d.err||"",rows:d.rows,fetched:Date.now()};
+    else fc={rows:(factLoad()||{}).rows||[],fetched:Date.now(),err:d&&d.error==="Неизвестное действие"?"Скрипт в таблице старой версии. Обновите его до версии 10 (файл «Скрипт_WB_v10»).":errText(d&&d.error||"Ошибка")}}
+  catch(e){fc={rows:(factLoad()||{}).rows||[],fetched:Date.now(),err:e.message}}
+  factCache=fc;try{localStorage.setItem(FKEY,JSON.stringify(fc))}catch(e){}}
 function factFor(p,weeks){
   const c=factLoad();if(!c||!p||!String(p.sku||"").trim())return null;
   const lim=new Date(Date.now()-(weeks||8)*7*86400000).toISOString().slice(0,10);
@@ -2028,7 +2033,14 @@ function factProfit(p,f){const P=S.p,w=p.wb||{},ads=(w.ads!=null?w.ads:P.ads)*f.
 function drawFact(tmp,w,r){
   const el=$("#factSec");if(!el)return;
   const p=editId?Object.assign({},tmp,{id:editId}):tmp,f=w?factFor(p):null;
-  if(!f){el.hidden=!(w&&p.sku&&factLoad());if(!el.hidden)el.innerHTML=`<h2>План и факт</h2><p class="hint">За 8 недель в отчётах WB нет продаж по артикулу ${esc(p.sku)}. Факт обновляется раз в неделю: «Деньги» → «WB» → «Обновить».</p>`;return}
+  if(!f){el.hidden=!w;if(!w)return;const fc=factLoad();
+    const msg=!SY.on?"Факт приходит из отчётов WB через Google Таблицу. Включите синхронизацию: «Ещё» → «Синхронизация с Google».":
+      !String(p.sku||"").trim()?"Укажите «Артикул WB» в блоке «Изделие» выше — по нему находятся продажи в отчётах WB.":
+      fc&&fc.err?`<span class="neg">${esc(fc.err)}</span>`:
+      !fc?"Факт ещё не загружался.":
+      !fc.rows.length?"В таблице пока нет отчётов. В таблице выберите меню «WB тарифы» → «Факт по товарам (отчёты WB)», затем нажмите «Загрузить факт».":
+      `За 8 недель в отчётах WB нет продаж по артикулу ${esc(p.sku)}.`;
+    el.innerHTML=`<h2>План и факт <small>по отчётам WB</small></h2><p class="hint">${msg}</p>${SY.on?`<div class="row2"><button type="button" class="btn small" data-act="factReload">Загрузить факт</button></div>`:""}`;return}
   el.hidden=false;
   const pPay=w.G-w.comm-w.U-w.L-w.acc,fQ=factProfit(p,f);
   const row=(t,pl,fa,lowerBetter,fmt)=>{const d=fa-pl,bad=lowerBetter?d>Math.abs(pl)*0.1+0.5:d<-Math.abs(pl)*0.1-0.5,good=lowerBetter?d<-Math.abs(pl)*0.1-0.5:d>Math.abs(pl)*0.1+0.5;
@@ -2051,7 +2063,7 @@ function drawFact(tmp,w,r){
    <p class="hint">Факт — из еженедельных отчётов WB о реализации за 8 недель. Реклама, налог и себестоимость в факте взяты из расчёта: в отчёте их нет.</p>`;
 }
 function factOverviewHtml(){
-  const c=factLoad();if(!c)return "";
+  const c=factLoad();if(!c||!c.rows.length)return `<section class="sec"><h2>План и факт по изделиям</h2><p class="hint">${c&&c.err?`<span class="neg">${esc(c.err)}</span>`:"Отчётов WB по товарам пока нет. В таблице: меню «WB тарифы» → «Факт по товарам (отчёты WB)», затем здесь «Обновить»."}</p></section>`;
   const L=S.products.filter(p=>p.wb&&p.wb.pb>0&&p.h>0).map(p=>{const f=factFor(p);if(!f)return null;const w=calc(p).w;return w?{p,f,w,q:factProfit(p,f)}:null}).filter(Boolean).sort((a,b)=>(a.q-a.w.Q)-(b.q-b.w.Q));
   const lim=new Date(Date.now()-56*86400000).toISOString().slice(0,10);
   const free=c.rows.filter(r=>r.to>=lim&&!r.nm).reduce((a,r)=>a+r.stor+r.acc+r.pen,0);
@@ -2175,7 +2187,8 @@ document.querySelector(".tabs").addEventListener("click",e=>{
 });
 $("#fab").addEventListener("click",()=>{if(view==="products")openProd(null);else editMat(matTab,null)});
 $("#main").addEventListener("click",e=>{
-  if(view==="prod"){const fa=e.target.closest("[data-act=factSetLog],[data-act=factSetBuy]");if(fa){const f=factFor(draft);if(f){if(fa.dataset.act==="factSetLog")$("#f_lb").value=dec(Math.round(f.log*(draft.wb.buy||S.p.buy)*100)/100);else $("#f_buy").value=pin(f.buy);readForm();markDirty();update();toast("Подставлено. Не забудьте сохранить")}return}
+  if(view==="prod"){const fr=e.target.closest("[data-act=factReload]");if(fr){fr.disabled=true;fr.textContent="Загружаю…";factFetch().then(()=>{update();const c=factLoad();toast(c&&c.err?c.err:"Факт загружен")});return}
+    const fa=e.target.closest("[data-act=factSetLog],[data-act=factSetBuy]");if(fa){const f=factFor(draft);if(f){if(fa.dataset.act==="factSetLog")$("#f_lb").value=dec(Math.round(f.log*(draft.wb.buy||S.p.buy)*100)/100);else $("#f_buy").value=pin(f.buy);readForm();markDirty();update();toast("Подставлено. Не забудьте сохранить")}return}
     const a=e.target.closest("[data-act=hideNotice]");if(a){delete S.notice;save();a.closest(".banner").remove()}return}
   const pr=e.target.closest("[data-prod]");if(pr){openProd(pr.dataset.prod);return}
   const row=e.target.closest(".row[data-c]");if(row){openMat(row.dataset.c,row.dataset.id);return}
