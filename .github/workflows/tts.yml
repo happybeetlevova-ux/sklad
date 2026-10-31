@@ -31,6 +31,6 @@ jobs:
       - name: Commit audio
         run: |
           mkdir -p tts/out
-          for f in out/*.wav; do ffmpeg -loglevel error -y -i "$f" -c:a flac "tts/out/$(basename "${f%.wav}").flac"; done
+          cp out/*.wav tts/out/
           git config user.name "tts-bot"; git config user.email "tts-bot@users.noreply.github.com"
           git add tts/out && git commit -m "audio [skip ci]" && git push
