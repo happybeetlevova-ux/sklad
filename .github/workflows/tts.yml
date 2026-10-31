@@ -2,6 +2,8 @@ name: tts
 on:
   push:
     branches: [tts]
+permissions:
+  contents: write
 jobs:
   voice:
     runs-on: ubuntu-latest
@@ -26,7 +28,9 @@ jobs:
             done < tts/scenes.txt
           done
           ls out | wc -l
-      - uses: actions/upload-artifact@v4
-        with:
-          name: voice
-          path: out
+      - name: Commit audio
+        run: |
+          mkdir -p tts/out
+          for f in out/*.wav; do ffmpeg -loglevel error -y -i "$f" -c:a flac "tts/out/$(basename "${f%.wav}").flac"; done
+          git config user.name "tts-bot"; git config user.email "tts-bot@users.noreply.github.com"
+          git add tts/out && git commit -m "audio [skip ci]" && git push
