@@ -1,0 +1,32 @@
+name: tts
+on:
+  push:
+    branches: [tts]
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Piper
+        run: |
+          curl -sL -o piper.tgz https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz
+          tar xzf piper.tgz
+          for v in irina dmitri; do
+            curl -sfL -o ru_$v.onnx "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/$v/medium/ru_RU-$v-medium.onnx"
+            curl -sfL -o ru_$v.onnx.json "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/$v/medium/ru_RU-$v-medium.onnx.json"
+          done
+          ls -la
+      - name: Speak
+        run: |
+          mkdir -p out
+          for v in irina dmitri; do
+            while IFS='|' read -r n text; do
+              [ -z "$n" ] && continue
+              echo "$text" | ./piper/piper --model ru_$v.onnx --length_scale 0.95 --sentence_silence 0.25 --output_file out/${v}_$n.wav
+            done < tts/scenes.txt
+          done
+          ls out | wc -l
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice
+          path: out
