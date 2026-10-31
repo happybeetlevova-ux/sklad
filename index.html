@@ -215,6 +215,23 @@
 .fact td.bad{color:var(--bad)}.fact td.good{color:var(--ok)}
 
 @media (min-width:1000px){.wrap{max-width:920px}.tabs .in{max-width:920px}html .fab{right:calc(50% - 444px)}[data-style="graphite"] .tabs{left:50%;right:auto;width:888px;transform:translateX(-50%)}[data-style="graphite"] .savebar{left:50%;right:auto;width:888px;transform:translateX(-50%)}.sheet{max-width:640px;border-radius:22px;margin-bottom:24px}}
+
+#printView.a4{background:#fff;color:#111;font:13px/1.45 "Manrope",system-ui,sans-serif}
+#printView .kp{max-width:190mm;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+#printView .kph{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid #111;padding-bottom:8px;font-size:12px}
+#printView h1{font:700 22px/1.2 "Unbounded","Manrope",sans-serif;margin:6px 0 0}
+#printView h2{font:700 16px/1.25 "Manrope",sans-serif;margin:0 0 4px}
+#printView p{margin:0}.kpm{color:#555;font-size:12px}
+#printView .kpi2{display:grid;grid-template-columns:62mm 1fr;gap:12px;border:1px solid #ddd;border-radius:10px;padding:10px;break-inside:avoid;page-break-inside:avoid}
+#printView .kpi2 img,#printView .noph{width:62mm;height:62mm;object-fit:cover;border-radius:8px;background:#f2f2f2;display:flex;align-items:center;justify-content:center;color:#888}
+#printView .kpi2>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+#printView table{border-collapse:collapse;font-size:12px}
+#printView .kpt th{font-weight:600;color:#555;text-align:left;padding:2px 10px 2px 0}#printView .kpt td{padding:0 10px 2px 0;font-size:15px}
+#printView .kps td{padding:2px 10px 2px 0;border-bottom:1px solid #eee;vertical-align:top}#printView .kps td:first-child{color:#666;white-space:nowrap}
+#printView .kpgood{background:#eaf6ee;border-radius:6px;padding:6px 8px;font-size:12px}
+#printView .kpd{font-size:12px;color:#333}
+#printView .kpc{border-top:1px solid #ddd;padding-top:8px;break-inside:avoid}#printView .kpc ul{margin:4px 0 6px;padding-left:18px}
+@media print{html,body{background:#fff!important}body::before{display:none}#printView.a4{padding:10mm}}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -422,7 +439,7 @@ textarea.inp{min-height:100px;font:12px/1.4 var(--f-num)}
 "use strict";
 const KEY="master3d_v1";
 const CATALOG=[{"name":"Бургер-пресс","sku":"","g":46.47,"h":1.36,"hw":0,"pin":0,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1890,"disc":0.66,"comm":0.39,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для зубных счеток","sku":"","g":51.48,"h":1.86,"hw":0,"pin":0.6,"pout":7.12,"mark":1.3,"ppk":null,"wb":{"pb":1882,"disc":0.62,"comm":0.42,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для наушников (белый)","sku":"","g":53.68,"h":1.66,"hw":0,"pin":0,"pout":11,"mark":1.3,"ppk":null,"wb":{"pb":1892,"disc":0.7,"comm":0.34,"ads":0.18,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для наушников (чёрный)","sku":"","g":53.68,"h":1.66,"hw":0,"pin":0,"pout":11,"mark":1.3,"ppk":null,"wb":{"pb":1892,"disc":0.7,"comm":0.34,"ads":0.18,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для туалетной бумаги","sku":"","g":43.74,"h":1.374,"hw":1.84,"pin":0.6,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1499,"disc":0.52,"comm":0.43,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Заглушки машины","sku":"","g":1.06,"h":0.3866,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Инь и янь (20 шт.)","sku":"","g":24.08,"h":1.07,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1000,"disc":0.55,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка для Яндекс станции Миди (жёлтый)","sku":"","g":50.42,"h":1.53,"hw":2.54,"pin":0,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.63,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка для Яндекс станции Миди (чёрный)","sku":"","g":50.42,"h":1.53,"hw":2.54,"pin":0.6,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.63,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (белая)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (жёлтая)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (чёрная)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговица сердце (30 шт.) 22,5 мм","sku":"","g":19.67,"h":0.86,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1290,"disc":0.7,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговка \"Звезда\" 30 шт.","sku":"","g":16.68,"h":0.83,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Пуговка круг с бортиком синия (30 шт.) 15 мм","sku":"","g":12.27,"h":0.71,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Пуговка сердце (30 шт.) 15 мм","sku":"","g":8.2964,"h":0.55,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1274,"disc":0.72,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговка сердце (30 шт.) 20 мм","sku":"","g":17.62,"h":0.9592,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1278,"disc":0.68,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговица сердце 2.0 (10 шт.) 20 мм.","sku":"","g":5.339,"h":0.3438,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":500,"disc":0.4,"comm":0.43,"ads":0.1,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Чёпики Агаева G","sku":"","g":0.3219,"h":0.029,"hw":0,"pin":0,"pout":0,"mark":0,"ppk":null,"wb":null},{"name":"Чёпики ГРАТ","sku":"","g":0.40183,"h":0.045729,"hw":0,"pin":0,"pout":0,"mark":0,"ppk":null,"wb":null}];
-const DEF={defMode:"auto",printers:1,printHours:14,stockDays:14,ppk:685,elec:1.27,delivery:10,labor:10,wear:7,defect:0.05,tax:0.04,acq:0.02,buy:0.90,load:0.65,optTax:0.06,partnerProfit:0.10,partnerTax:0.06,lb:49.3,disc:0.6,comm:0.35,ads:0.18,spp:0.15};
+const DEF={defMode:"auto",printers:1,printHours:14,stockDays:14,ppk:685,elec:1.27,delivery:10,labor:10,wear:7,defect:0.05,tax:0.04,acq:0.02,buy:0.90,load:0.65,optTax:0.06,partnerProfit:0.10,partnerMargin:0.25,partnerExtra:0.05,optPerH:70,partnerTax:0.06,lb:49.3,disc:0.6,comm:0.35,ads:0.18,spp:0.15};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -445,14 +462,14 @@ function parseTime(s){
 /* ================= данные и перенос ================= */
 function valid(d){return d&&d.v===2&&Array.isArray(d.products)&&Array.isArray(d.plastics)&&Array.isArray(d.parts)}
 function normName(s){return String(s||"").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim()}
-function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true,plate:1,plateH:0,links:[]},o||{})}
+function newProduct(o){return Object.assign({id:uid(),name:"",sku:"",qty:0,min:0,h:0,rec:{pl:[],pt:[]},g0:0,p0k:null,ex:[],wb:null,plan:0,subj:null,vol:0,autoLog:true,plate:1,plateH:0,links:[],card:{},photo:""},o||{})}
 const WBCFG_DEF={url:"",wh:"",model:"fbs",last:""};
 const UI_DEF={accent:"teal",mode:"auto",icon:"nozzle",iconColor:"auto",style:"graphite",widgets:["today","money","soon"]};
 const STYLES=[["classic","Классика"],["draft","Чертёж"],["graphite","Графит"],["soft","Мягкий"]];
 function normalize(d){d.p={...DEF,...(d.p||{})};if(!Array.isArray(d.log))d.log=[];d.wbcfg={...WBCFG_DEF,...(d.wbcfg||{})};d.ui={...UI_DEF,...(d.ui||{})};if(!Array.isArray(d.money))d.money=[];if(!Array.isArray(d.deals))d.deals=[];d.tax=Object.assign({bonus:null,paid:{}},d.tax||{});if(!d.tax.paid)d.tax.paid={};if(!Array.isArray(d.buyers)){d.buyers=[];
   d.deals.slice().sort((a,b)=>a.t-b.t).forEach(x=>{if(!x.buyer)return;let b=d.buyers.find(y=>y.name.toLowerCase()===String(x.buyer).toLowerCase());
     if(!b){b={id:uid(),name:x.buyer,tax:x.tax,phone:"",note:"",disc:0,prices:{}};d.buyers.push(b)}b.tax=x.tax;b.prices[x.pid]=x.price;x.bid=b.id})}
-  if(d.wbSnap===undefined)d.wbSnap=null;d.ordCfg=Object.assign({on:false,start:0,planMail:true},d.ordCfg||{});if(!d.ordApplied||typeof d.ordApplied!=='object')d.ordApplied={};if(!d.ordBack||typeof d.ordBack!=='object')d.ordBack={};d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true;if(!(p.plate>=1))p.plate=1;if(!(p.plateH>0))p.plateH=0;if(!Array.isArray(p.links))p.links=[]});return d}
+  if(d.wbSnap===undefined)d.wbSnap=null;d.ordCfg=Object.assign({on:false,start:0,planMail:true},d.ordCfg||{});if(!d.ordApplied||typeof d.ordApplied!=='object')d.ordApplied={};if(!d.ordBack||typeof d.ordBack!=='object')d.ordBack={};d.products.forEach(p=>{if(p.subj===undefined)p.subj=null;if(!(p.vol>0))p.vol=0;if(p.autoLog===undefined)p.autoLog=true;if(!(p.plate>=1))p.plate=1;if(!(p.plateH>0))p.plateH=0;if(!Array.isArray(p.links))p.links=[];if(!p.card||typeof p.card!=='object')p.card={};if(typeof p.photo!=='string')p.photo=''});d.sup=Object.assign({name:'',inn:'',phone:'',mail:'',pay:'100% предоплата',ship:'Самовывоз или доставка до ТК',days:14,moq:10,note:''},d.sup||{});return d}
 function migrate(sk,ce){
   const p={...DEF,...((ce&&ce.p)||{})};
   const D={v:2,p,products:[],plastics:[],parts:[],log:[]};
@@ -925,6 +942,7 @@ function renderProd(){
     <div class="grid2" style="margin-top:10px">${F("f_vol","Объём упаковки",d.vol>0?dec(d.vol):"","л","Д×Ш×В в см ÷ 1000")}<label class="field"><span>Логистика</span><label style="display:flex;gap:8px;align-items:center;padding:10px 0"><input type="checkbox" id="f_autolog" ${d.autoLog!==false?"checked":""}> менять вместе с тарифом WB</label></label></div>
     </div>
   </section>
+  <details class="sec" id="cardSec" ${d.card&&(d.card.title||d.card.desc)?"":""}><summary style="cursor:pointer"><h2 style="display:inline">Карточка WB и коммерческое предложение</h2> <small class="hint">фото, описание, размеры, упаковка</small></summary>${cardFormHtml(d)}</details>
   <section class="sec" id="costSec"></section>
   <section class="sec" id="wbSec"></section>
   <section class="sec" id="targetSec"></section>
@@ -932,9 +950,9 @@ function renderProd(){
   <section class="sec" id="factSec" hidden></section>
   <div class="row2"><button type="button" class="btn main" id="e_save">${editId?"Сохранить":"Добавить изделие"}</button>${editId?`<button type="button" class="btn" id="e_dup">Копия (другой цвет)</button><button type="button" class="btn danger" id="e_del">Удалить</button>`:""}</div>`;
   window.scrollTo(0,0);
-  m.oninput=e=>{if(e.target.id==="f_tm"||e.target.id==="f_3mf"||e.target.closest("#sheet"))return;readForm();markDirty();update()};
-  m.onchange=e=>{if(e.target.id==="f_3mf"){const f=e.target.files[0];e.target.value="";if(f)import3mf(f);return}if(e.target.id==="f_autolog"){readForm();markDirty();return}if(e.target.id==="f_on"){draft.wb.off=!e.target.checked;$("#wbBox").hidden=draft.wb.off;readForm();markDirty();update()}else if(e.target.tagName==="SELECT"){readForm();markDirty();update()}};
-  drawRec();drawEx();drawLinks();drawStock();drawSubj();
+  m.oninput=e=>{if(e.target.id==="f_tm"||e.target.id==="f_3mf"||e.target.id==="f_photo"||e.target.closest("#sheet"))return;readForm();markDirty();update()};
+  m.onchange=e=>{if(e.target.id==="f_photo"){const f=e.target.files[0];e.target.value="";if(f)photoPick(f);return}if(e.target.id==="f_3mf"){const f=e.target.files[0];e.target.value="";if(f)import3mf(f);return}if(e.target.id==="f_autolog"){readForm();markDirty();return}if(e.target.id==="f_on"){draft.wb.off=!e.target.checked;$("#wbBox").hidden=draft.wb.off;readForm();markDirty();update()}else if(e.target.tagName==="SELECT"){readForm();markDirty();update()}};
+  drawRec();drawEx();drawLinks();drawStock();drawSubj();bindCardForm();
   $("#f_subj").onclick=()=>{readForm();openSubjPicker((sj,rate)=>{draft.subj=sj;if(rate!==null){draft.wb.comm=rate/100;const ci=$("#f_comm");if(ci)ci.value=pin(rate/100)}drawSubj();markDirty();update()})};
   $("#addPl").onclick=()=>{if(!S.plastics.length){toast("Сначала добавьте пластик во вкладке «Материалы»");return}readForm();draft.rec.pl.push({id:S.plastics[0].id,q:0});drawRec();markDirty();update()};
   $("#addPt").onclick=()=>{if(!S.parts.length){toast("Сначала добавьте детали во вкладке «Материалы»");return}readForm();draft.rec.pt.push({id:S.parts[0].id,q:0});drawRec();markDirty();update()};
@@ -1001,11 +1019,16 @@ function readForm(){
   d.name=v("f_name").trim();d.sku=v("f_sku").trim();const op_=n("f_opt");d.opt=op_>0?op_:0;const mn=n("f_min");d.min=mn>=0?mn:0;
   const pc=n("f_plate");d.plate=pc>=1?Math.floor(pc):1;const ph=parseTime(v("f_plateH"));d.plateH=ph>0?ph:0;
   const hf=$("#f_h");if(d.plate>1&&d.plateH>0){d.h=d.plateH/d.plate;if(hf){hf.readOnly=true;hf.value=dec(Math.round(d.h*10000)/10000)}}else{if(hf&&hf.readOnly){hf.readOnly=false}d.h=parseTime(v("f_h"))}
+  if($("#f_ctitle")){const c=d.card||(d.card={}),t=id=>v(id).trim();
+    c.title=t("f_ctitle");c.art=t("f_cart");c.brand=t("f_brand");c.color=t("f_ccolor");c.mat=t("f_cmat");c.kit=t("f_kit");c.country=t("f_country");c.barcode=t("f_barcode");c.tnved=t("f_tnved");c.doc=t("f_doc");c.desc=v("f_desc");
+    const dims=pre=>["l","w","h"].map(k=>{const x=n(pre+k);return x>0?x:0});c.size=dims("f_s");c.pack=dims("f_k");const wg=n("f_cw");c.weight=wg>0?wg:0;const pw=n("f_pw");c.packW=pw>0?pw:0;const mq=n("f_moq");c.moq=mq>0?Math.floor(mq):0;
+    c.chars=[...document.querySelectorAll("#chBox .rec")].map(r=>{const ins=r.querySelectorAll("input");return {k:ins[0].value.trim(),v:ins[1].value.trim()}}).filter(x=>x.k||x.v);
+    if(c.pack.every(x=>x>0)){const vv=Math.round(c.pack[0]*c.pack[1]*c.pack[2]/1000*1000)/1000;const fv=$("#f_vol");if(fv&&Math.abs(num(fv.value)-vv)>1e-9){fv.value=dec(vv)}}}
   if($("#lnBox"))d.links=[...document.querySelectorAll("#lnBox .rec")].map(r=>{const ins=r.querySelectorAll("input");return {t:ins[0].value.trim(),u:ins[1].value.trim()}});
   const g0=n("f_g0");d.g0=g0>0?g0:0;
   const pl=[],pt=[];document.querySelectorAll("#recBox .rec").forEach(r=>{const q=num(r.querySelector("input").value);(r.dataset.k==="pl"?pl:pt).push({id:r.querySelector("select").value,q:q>0?q:0})});d.rec={pl,pt};
   d.ex=[...document.querySelectorAll("#exBox .rec")].map(r=>{const ins=r.querySelectorAll("input");const val=num(ins[1].value);return {n:ins[0].value.trim(),v:val>0?val:0}});
-  const vl=n("f_vol");d.vol=vl>0?vl:0;const al=$("#f_autolog");if(al)d.autoLog=al.checked;
+  const vl=n("f_vol");d.vol=vl>0?vl:0;if(d.card&&d.card.pack&&d.card.pack.every(x=>x>0))d.vol=Math.round(d.card.pack[0]*d.card.pack[1]*d.card.pack[2]/1000*1000)/1000;const al=$("#f_autolog");if(al)d.autoLog=al.checked;
   const b=d.wb;b.pb=n("f_pb");b.disc=p("f_disc");b.comm=p("f_comm");b.ads=p("f_ads");b.spp=p("f_spp");b.lb=n("f_lb");b.buy=p("f_buy");b.acc=n("f_acc")||0;
   ["disc","comm","ads","spp"].forEach(k=>{if(!isFinite(b[k]))b[k]=0});if(!(b.buy>0))b.buy=S.p.buy;if(!(b.lb>0))b.lb=S.p.lb;
 }
@@ -1065,12 +1088,23 @@ function update(){
   const tm=()=>{const mg=num($("#f_tm").value)/100,o=isFinite(mg)?priceForMargin(r.c.total,d.wb,mg):null;
     $("#tmOut").innerHTML=o?`<div class="ln"><span>до скидки</span><span><b>${rub(o.pb)}</b></span></div><div class="ln"><span>после скидки</span><span>${rub(o.G)}</span></div>`:`<span class="hint">Недостижимо при этих комиссии и рекламе</span>`};
   $("#f_tm").oninput=tm;tm();
-  const ops=[0.10,0.07,0.05].map(a=>[a,wholesale(r.c.total,w.G,d.wb.comm,w.L,a)]);
-  os.innerHTML=`<h2>Опт для партнёра на WB <small>ваш налог ${pct(P.optTax,0)}</small></h2>
-   <p class="hint">Партнёр продаёт по вашей цене ${rub(w.G)} и хочет ${pct(P.partnerProfit,0)} прибыли.</p>
-   <div class="scroll"><table class="t"><thead><tr><th>Реклама партнёра</th><th>Оптовая цена</th><th>Ваша прибыль</th><th>ROI</th></tr></thead><tbody>
-   ${ops.map(([a,o])=>`<tr><td>${pct(a,0)}</td><td>${rub(o.opt)}</td><td>${rub(o.mine)}</td><td>${pct(o.roi,0)}</td></tr>`).join("")}
-   <tr><td><b>Продаю сам</b></td><td>—</td><td><b>${rub(w.Q)}</b></td><td>${pct(w.roi,0)}</td></tr></tbody></table></div>`;
+  os.innerHTML=optSecHtml(tmp,d);
+  const os_=$("#opt_set");if(os_)os_.onclick=()=>{const o=optCalc(cleanItem(draft));$("#f_opt").value=dec(o.rec);readForm();markDirty();update();toast("Базовая оптовая цена: "+rub(o.rec)+". Сохраните изделие")};
+  const kp1=$("#kp_one");if(kp1)kp1.onclick=()=>{if(dirty&&!saveDraft(false,true))return;openKP([editId])};
+}
+function optSecHtml(tmp,d){
+  const P=S.p,o=optCalc(tmp),w=o.w,cur=d.opt>0?d.opt:null,moq=num(d.card&&d.card.moq)>0?num(d.card.moq):S.sup.moq||10;
+  const row=(t,v)=>{if(!(v>0))return "";const m=o.mine(v),pt=o.partner(v);return `<tr><td>${t}</td><td>${rub(v)}</td><td class="${m<0?"bad":""}">${rub(m)}</td><td>${o.h?n1(m/o.h,0):"—"}</td><td class="${pt<0?"bad":""}">${rub(pt)}</td><td>${pct(pt/w.G,0)}</td><td>×${n1(w.G/v,1)}</td></tr>`};
+  const verdict=!o.ok?`<div class="verdict bad">Опт по этому изделию невыгоден: при вашем минимуме ${rub(o.floor)} партнёру останется ${rub(o.partner(o.floor))} с продажи (${pct(o.partner(o.floor)/w.G,0)}), а рынку нужно ≈ ${pct(P.partnerMargin,0)}. Варианты: поднять цену на WB, ускорить печать или продавать только самому.</div>`
+    :`<div class="verdict ok">Рекомендуемая цена <b>${rub(o.rec)}</b>: партнёр зарабатывает ${pct(P.partnerMargin,0)} с цены на WB, вы — ${rub(o.mine(o.rec))} с штуки (${n1(o.mine(o.rec)/o.h,0)} ₽/час). Торговаться можно до ${rub(o.floor)}.</div>`;
+  return `<h2>Оптовая цена <small>ваш налог ${pct(P.optTax,0)}</small></h2>
+   <div class="lines"><div class="ln"><span>Ваш минимум <small>· себестоимость + ${n1(P.optPerH,0)} ₽ за час печати + налог</small></span><span>${rub(o.floor)}</span></div>
+   <div class="ln"><span>Потолок для партнёра <small>· его маржа ${pct(P.partnerMargin,0)} при цене ${rub(w.G)}</small></span><span>${rub(o.ceil)}</span></div></div>${verdict}
+   <div class="scroll"><table class="t fact"><thead><tr><th>Цена</th><th>₽/шт</th><th>Вам</th><th>₽/час</th><th>Партнёру</th><th>Маржа</th><th>Наценка</th></tr></thead><tbody>
+   ${row("Минимум",o.floor)}${o.rec?row("<b>Рекомендуемая</b>",o.rec):""}${cur&&cur!==o.rec&&cur!==o.floor?row("Ваша базовая",cur):""}</tbody></table></div>
+   ${o.rec?`<p class="hint">Скидки за объём (не ниже минимума): ${optTiers(o.rec,o.floor,moq).map(([q,v])=>`от ${q} шт — ${rub(v)}`).join(" · ")}.</p>`:""}
+   <div class="row2">${o.rec&&cur!==o.rec?`<button type="button" class="btn small" id="opt_set">Сделать базовой оптовой ценой</button>`:""}${editId?`<button type="button" class="btn small main" id="kp_one">Коммерческое предложение</button>`:""}</div>
+   <p class="hint">«Партнёру» — сколько у него останется со штуки после комиссии и рекламы WB, логистики, эквайринга, налога ${pct(P.partnerTax,0)}, прочих расходов ${pct(P.partnerExtra,0)} и закупки у вас. Наценка — цена на WB ÷ оптовая; селлеры обычно ищут ×2,5 и выше. Ставки — «Ещё» → «Параметры: Принтер и опт».</p>`;
 }
 function saveDraft(leave,silent){
   readForm();
@@ -1591,7 +1625,20 @@ function doubleCount(p){
   return out;
 }
 function buyerByName(n){n=String(n||"").trim().toLowerCase();return n?S.buyers.find(b=>b.name.toLowerCase()===n)||null:null}
-function baseOpt(p){if(p.opt>0)return {v:p.opt,src:"базовая оптовая цена"};const r=calc(p);if(r.w){return {v:wholesale(r.c.total,r.w.G,p.wb.comm,r.w.L,0.07).opt,src:"расчётная оптовая цена"}}return null}
+/* Коридор оптовой цены: снизу — ваш минимум (₽/час принтера), сверху — сколько выдержит партнёр, продающий на WB с нормальной маржой */
+const r5=v=>Math.floor(v/5)*5;
+function optCalc(p,x){
+  const P=S.p,r=calc(p),c=r.c.total,h=p.h||0,w=r.w;
+  const floor=Math.ceil((c+(P.optPerH||0)*h)/(1-P.optTax)/5)*5;
+  const res={c,h,floor,w,ceil:null,rec:null,ok:false};
+  if(w){const b=p.wb,ads=b.ads!=null?b.ads:P.ads;
+    res.keep=w.G*(1-b.comm-ads-P.acq-P.partnerTax-P.partnerExtra)-w.L-w.acc; /* что остаётся партнёру с продажи до покупки товара */
+    res.ceil=r5(res.keep-w.G*P.partnerMargin);res.ok=res.ceil>=floor;res.rec=res.ok?res.ceil:null}
+  res.mine=v=>v-c-v*P.optTax;
+  res.partner=v=>res.keep!=null?res.keep-v:null;
+  return res}
+function optTiers(base,floor,moq){const t=[[moq,base]];for(const [k,d] of [[5,0.05],[10,0.1]]){const v=Math.max(floor,r5(base*(1-d)));if(v<t[t.length-1][1])t.push([moq*k,v])}return t}
+function baseOpt(p){if(p.opt>0)return {v:p.opt,src:"базовая оптовая цена"};const o=optCalc(p);if(o.rec)return {v:o.rec,src:"рекомендуемая оптовая цена"};if(o.c>0&&p.h>0)return {v:o.floor,src:"минимальная оптовая цена"};return null}
 function buyerPrice(b,p){
   if(b.prices&&b.prices[p.id]>0)return {price:b.prices[p.id],src:"цена из прайса покупателя"};
   const base=baseOpt(p);if(!base)return null;
@@ -1636,7 +1683,8 @@ function openBuyer(bid){
    <div class="box"><h3>Прайс покупателя, ₽ за шт</h3><p class="hint">Пустое поле — цена считается от базовой оптовой со скидкой покупателя.</p>
     ${prods.map(p=>{const bp=buyerPrice({...b,prices:{}},p);return `<div class="ln" style="align-items:center"><span>${esc(p.name)}<br><small>${bp?"без своей цены: "+rub(bp.price):"нет базовой цены"}</small></span><span><input class="inp" style="width:96px;text-align:right" type="text" inputmode="decimal" data-bprice="${p.id}" value="${b.prices[p.id]>0?dec(b.prices[p.id]):""}" placeholder="${bp?bp.price:""}"></span></div>`}).join("")}</div>
    ${hist}
-   <div class="row2" id="bu_tail"><button type="button" class="btn main" id="bu_ok">${isNew?"Добавить":"Сохранить"}</button><button type="button" class="btn" id="bu_back">Назад</button>${isNew?"":`<button type="button" class="btn danger" id="bu_del">Удалить</button>`}</div>`,s=>{
+   <div class="row2" id="bu_tail"><button type="button" class="btn main" id="bu_ok">${isNew?"Добавить":"Сохранить"}</button><button type="button" class="btn" id="bu_back">Назад</button>${isNew?"":`<button type="button" class="btn" id="bu_kp">КП</button><button type="button" class="btn danger" id="bu_del">Удалить</button>`}</div>`,s=>{
+    const bkp=s.querySelector("#bu_kp");if(bkp)bkp.onclick=()=>openKP(Object.keys(b.prices).filter(id=>find("products",id)),b.id);
     s.querySelector("#bu_back").onclick=openBuyers;
     s.querySelectorAll("[data-bpay]").forEach(x=>x.onclick=()=>{payDeal(x.dataset.bpay);openBuyer(bid)});
     s.querySelector("#bu_ok").onclick=()=>{
@@ -2100,6 +2148,111 @@ function factOverviewHtml(){
    <p class="hint">Сверху — изделия, где факт хуже расчёта сильнее всего. Нажмите на название — в карточке будет разбор по строкам и подсказки.${c.err?` <span class="neg">${esc(c.err)}</span>`:""}</p></section>`;
 }
 
+
+/* ================= карточка WB, поставщик, коммерческое предложение ================= */
+function matGuess(p){const t=[...new Set((p.rec&&p.rec.pl||[]).map(r=>{const m=find("plastics",r.id);return m&&m.type?String(m.type).toUpperCase():""}).filter(Boolean))];return t.length?t.join(", ")+" пластик":""}
+function colorGuess(p){const t=[...new Set((p.rec&&p.rec.pl||[]).map(r=>{const m=find("plastics",r.id);return m&&m.color||""}).filter(Boolean))];return t.join(", ")}
+function cardFormHtml(d){
+  const c=d.card||{},g=calc(cleanItem(Object.assign({},d,{id:"__draft"}))).c.grams,dim=(pre,a,t,h)=>`<label class="field"><span>${t}</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">${["l","w","h"].map((k,i)=>`<input id="${pre}${k}" class="inp" inputmode="decimal" placeholder="${["Д","Ш","В"][i]}" value="${a&&a[i]>0?dec(a[i]):""}">`).join("")}</div><small>${h}</small></label>`;
+  return `<div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+   <div class="field"><span>Фото для КП</span><div style="display:flex;gap:12px;align-items:center">${d.photo?`<img src="${d.photo}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:12px">`:""}<div class="row2" style="flex:1"><label class="btn small" for="f_photo">${d.photo?"Заменить фото":"Добавить фото"}</label>${d.photo?`<button type="button" class="btn small ghost" id="f_photodel">Убрать</button>`:""}</div></div><input id="f_photo" type="file" accept="image/*" hidden><small>Одно главное фото. Приложение уменьшит его до 800 px.</small></div>
+   <label class="field"><span>Название для WB</span><input id="f_ctitle" class="inp" maxlength="60" value="${esc(c.title||"")}" placeholder="${esc(d.name)}"><small>до 60 символов: что это + главное свойство</small></label>
+   <div class="grid2"><label class="field"><span>Артикул продавца</span><input id="f_cart" class="inp" value="${esc(c.art||"")}" placeholder="например TVBOX-BLK"></label><label class="field"><span>Бренд</span><input id="f_brand" class="inp" value="${esc(c.brand||"")}"></label>
+   <label class="field"><span>Цвет</span><input id="f_ccolor" class="inp" value="${esc(c.color||"")}" placeholder="${esc(colorGuess(d))}"></label><label class="field"><span>Материал</span><input id="f_cmat" class="inp" value="${esc(c.mat||"")}" placeholder="${esc(matGuess(d))}"></label></div>
+   <div class="grid2">${dim("f_s",c.size,"Размер изделия, см","длина × ширина × высота")}<label class="field"><span>Вес изделия, г</span><input id="f_cw" class="inp" inputmode="decimal" value="${c.weight>0?dec(c.weight):""}" placeholder="${g>0?n1(g,0):""}"><small>${g>0?"по составу ≈ "+n1(g,0)+" г":""}</small></label>
+   ${dim("f_k",c.pack,"Упаковка, см","WB считает логистику по ней")}<label class="field"><span>Вес с упаковкой, г</span><input id="f_pw" class="inp" inputmode="decimal" value="${c.packW>0?dec(c.packW):""}"></label></div>
+   <div class="grid2"><label class="field"><span>Комплектация</span><input id="f_kit" class="inp" value="${esc(c.kit||"")}" placeholder="Изделие — 1 шт, крепёж — 2 шт"></label><label class="field"><span>Страна производства</span><input id="f_country" class="inp" value="${esc(c.country||"")}" placeholder="Россия"></label>
+   <label class="field"><span>Баркод (EAN-13)</span><input id="f_barcode" class="inp" inputmode="numeric" value="${esc(c.barcode||"")}"></label><label class="field"><span>ТН ВЭД</span><input id="f_tnved" class="inp" inputmode="numeric" value="${esc(c.tnved||"")}"></label>
+   <label class="field"><span>Документ</span><input id="f_doc" class="inp" value="${esc(c.doc||"")}" placeholder="Декларация ЕАЭС № … / отказное письмо"></label><label class="field"><span>Мин. партия опта, шт</span><input id="f_moq" class="inp" inputmode="numeric" value="${c.moq>0?c.moq:""}" placeholder="${S.sup.moq||10}"></label></div>
+   <label class="field"><span>Описание</span><textarea id="f_desc" class="inp" maxlength="5000" style="min-height:120px;font:inherit" placeholder="Для чего, чем удобно, размеры и совместимость, уход. Можно попросить меня написать — команда «карточка WB».">${esc(c.desc||"")}</textarea></label>
+   <div class="box"><h3>Другие характеристики</h3><div id="chBox" style="display:flex;flex-direction:column;gap:6px">${(c.chars||[]).map(x=>`<div class="rec lnk"><input class="inp" value="${esc(x.k)}" placeholder="Название"><input class="inp" value="${esc(x.v)}" placeholder="Значение"><button type="button" class="x" data-chdel aria-label="Убрать">×</button></div>`).join("")}</div>
+   <div class="chips">${["Назначение","Способ крепления","Максимальная нагрузка","Особенности"].map(k=>`<button type="button" class="chip" data-chadd="${k}">+ ${k}</button>`).join("")}<button type="button" class="chip" data-chadd="">+ Своя</button></div></div></div>`;
+}
+function bindCardForm(){
+  const m=$("#main");if(!$("#cardSec"))return;
+  m.querySelectorAll("[data-chadd]").forEach(b=>b.onclick=()=>{readForm();(draft.card.chars||(draft.card.chars=[])).push({k:b.dataset.chadd,v:""});redrawCard()});
+  m.querySelectorAll("[data-chdel]").forEach(b=>b.onclick=()=>{readForm();const i=[...$("#chBox").children].indexOf(b.parentElement);draft.card.chars.splice(i,1);redrawCard();markDirty()});
+  const pd=$("#f_photodel");if(pd)pd.onclick=()=>{draft.photo="";redrawCard();markDirty()};
+}
+function redrawCard(){const sec=$("#cardSec");if(!sec)return;sec.open=true;sec.querySelector("summary").nextElementSibling.outerHTML=cardFormHtml(draft);bindCardForm()}
+function photoPick(f){
+  const img=new Image(),url=URL.createObjectURL(f);
+  img.onload=()=>{const k=Math.min(1,800/Math.max(img.width,img.height)),cv=document.createElement("canvas");cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);
+    cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);readForm();draft.photo=cv.toDataURL("image/jpeg",0.78);redrawCard();markDirty();toast("Фото добавлено. Сохраните изделие")};
+  img.onerror=()=>toast("Не удалось открыть картинку");img.src=url;
+}
+function leadDays(p,q){const perDay=(S.p.printers||1)*(S.p.printHours||14);if(!(p.h>0))return null;const per=p.plate>1?p.plate:1,ph=p.plateH>0?p.plateH:p.h*per;return Math.ceil(Math.ceil(Math.max(0,q-Math.max(0,p.qty))/per)*ph/perDay)+1}
+function supCardHtml(){const u=S.sup;const f=(k,l,ph,hint)=>`<label class="field"><span>${l}</span><input class="inp" data-sup="${k}" value="${esc(u[k]==null?"":u[k])}" placeholder="${esc(ph||"")}">${hint?`<small>${hint}</small>`:""}</label>`;
+  return `<div class="card"><h2>Поставщик для коммерческих предложений</h2><p>Эти данные попадут в шапку и условия КП.</p>
+   <div class="grid2">${f("name","Название","ИП Иванов В. / Мастерская 3D")}${f("inn","ИНН","")}${f("phone","Телефон","+7 …")}${f("mail","E-mail / Telegram","")}${f("pay","Оплата","100% предоплата")}${f("ship","Доставка","Самовывоз или ТК")}${f("days","КП действует, дней","14")}${f("moq","Мин. партия по умолчанию, шт","10")}</div>
+   ${f("note","Дополнительно","Изготовим в вашем цвете от 50 шт, нанесём логотип")}
+   <div class="row2"><button type="button" class="btn main" data-act="kpMany">Сделать КП на несколько изделий</button></div></div>`}
+function kpNum(){const d=new Date();return "КП-"+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")}
+function kpItems(ids,bid,prices,moqs){
+  const b=bid?S.buyers.find(x=>x.id===bid):null;
+  return ids.map(id=>{const p=find("products",id);if(!p)return null;const o=optCalc(p),bp=b?buyerPrice(b,p):null,base=baseOpt(p);
+    const price=prices&&prices[id]>0?prices[id]:bp?bp.price:base?base.v:0,moq=moqs&&moqs[id]>0?moqs[id]:(p.card&&p.card.moq)||S.sup.moq||10;
+    return {p,o,price,moq,tiers:optTiers(price,Math.min(price,o.floor),moq),days:leadDays(p,moq),partner:o.partner(price),G:o.w?o.w.G:null}}).filter(Boolean);
+}
+function openKP(ids,bid){
+  const items=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));let sel=new Set(ids||[]);
+  openSheet(`<h2>Коммерческое предложение</h2>
+   <label class="field"><span>Кому</span><select id="kp_b" class="inp"><option value="">Без имени покупателя</option>${S.buyers.map(b=>`<option value="${b.id}" ${b.id===bid?"selected":""}>${esc(b.name)}</option>`).join("")}</select><small>цены возьмутся из прайса покупателя</small></label>
+   <div class="box"><h3>Изделия, цена за шт и мин. партия</h3><div id="kp_list"></div></div>
+   ${!S.sup.name||!S.sup.phone?`<p class="hint neg">Заполните «Поставщик для КП» в «Ещё» — иначе в КП не будет вашего имени и телефона.</p>`:""}
+   <div class="row2"><button type="button" class="btn main" id="kp_pdf">КП (PDF / печать)</button><button type="button" class="btn" id="kp_xls">Excel для карточек WB</button></div>
+   <div class="row2"><button type="button" class="btn small ghost" id="kp_ph">Скачать фото</button><button type="button" class="btn small ghost" id="kp_x">Закрыть</button></div>`,s=>{
+    const draw=()=>{const bidv=s.querySelector("#kp_b").value,its=kpItems(items.map(p=>p.id),bidv);
+      s.querySelector("#kp_list").innerHTML=its.map(it=>`<div class="fbsrow" style="grid-template-columns:auto 1fr 84px 64px"><input type="checkbox" data-kp="${it.p.id}" ${sel.has(it.p.id)?"checked":""}><span>${esc(it.p.name)}<small>${it.o.rec?"рекоменд. "+rub(it.o.rec)+" · ":""}мин. ${rub(it.o.floor)}${it.price&&it.price<it.o.floor?` · <span class="neg">ниже вашего минимума</span>`:""}${it.G&&it.partner!=null&&it.partner/it.G<S.p.partnerMargin?` · <span class="neg">партнёру остаётся ${pct(Math.max(0,it.partner)/it.G,0)}</span>`:""}</small></span><input class="inp" data-kpp="${it.p.id}" inputmode="decimal" value="${it.price?dec(it.price):""}" aria-label="Цена"><input class="inp" data-kpm="${it.p.id}" inputmode="numeric" value="${it.moq}" aria-label="Мин. партия"></div>`).join("");
+      s.querySelectorAll("[data-kp]").forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.kp):sel.delete(c.dataset.kp)})};
+    draw();s.querySelector("#kp_b").onchange=draw;
+    const collect=()=>{const pr={},mq={};s.querySelectorAll("[data-kpp]").forEach(i=>{const v=num(i.value);if(v>0)pr[i.dataset.kpp]=v});s.querySelectorAll("[data-kpm]").forEach(i=>{const v=num(i.value);if(v>0)mq[i.dataset.kpm]=Math.floor(v)});
+      const ids2=items.map(p=>p.id).filter(id=>sel.has(id));if(!ids2.length){toast("Отметьте изделия");return null}return kpItems(ids2,s.querySelector("#kp_b").value,pr,mq)};
+    s.querySelector("#kp_x").onclick=closeSheet;
+    s.querySelector("#kp_pdf").onclick=()=>{const it=collect();if(it)showKP(it,s.querySelector("#kp_b").value)};
+    s.querySelector("#kp_xls").onclick=()=>{const it=collect();if(it)kpExcel(it,s.querySelector("#kp_b").value)};
+    s.querySelector("#kp_ph").onclick=()=>{const it=collect();if(!it)return;let k=0;it.forEach(x=>{if(x.p.photo){const a=document.createElement("a");a.href=x.p.photo;a.download=(x.p.card.art||x.p.name).replace(/[\\/:*?"<>|]/g,"_")+".jpg";document.body.appendChild(a);a.click();a.remove();k++}});toast(k?`Фото: ${k}`:"У выбранных изделий нет фото")};
+  });
+}
+function kpSpecs(p){const c=p.card||{},g=calc(p).c.grams,dm=a=>a&&a.every(x=>x>0)?a.map(x=>n1(x,1)).join(" × ")+" см":"";
+  return [["Размер",dm(c.size)],["Вес",c.weight>0?n1(c.weight,0)+" г":g>0?"≈ "+n1(g,0)+" г":""],["Материал",c.mat||matGuess(p)],["Цвет",c.color||colorGuess(p)],["Комплектация",c.kit],["Упаковка",dm(c.pack)],["Вес с упаковкой",c.packW>0?n1(c.packW,0)+" г":""],["Страна",c.country||"Россия"],["Документ",c.doc],["Баркод",c.barcode],...(c.chars||[]).map(x=>[x.k,x.v])].filter(x=>x[0]&&x[1])}
+function showKP(items,bid){
+  closeSheet();const b=bid?S.buyers.find(x=>x.id===bid):null,u=S.sup,P=S.p,no=kpNum(),till=new Date(Date.now()+(u.days||14)*86400000).toLocaleDateString("ru-RU");
+  let v=$("#printView");if(v)v.remove();v=document.createElement("div");v.id="printView";v.className="a4";
+  v.innerHTML=`<div class="pvbar"><button type="button" class="btn main" id="pv_print">Печать / PDF</button><button type="button" class="btn" id="pv_close">Закрыть</button></div>
+  <div class="kp">
+   <header class="kph"><div><b>${esc(u.name||"Поставщик")}</b>${u.inn?`<br>ИНН ${esc(u.inn)}`:""}</div><div style="text-align:right">${esc(u.phone||"")}${u.mail?`<br>${esc(u.mail)}`:""}</div></header>
+   <h1>Коммерческое предложение</h1><p class="kpm">${no} от ${new Date().toLocaleDateString("ru-RU")} · действует до ${till}${b?` · для: <b>${esc(b.name)}</b>`:""}</p>
+   <p>Предлагаем изделия собственного производства (3D-печать на Bambu Lab H2D) для продажи на маркетплейсах. Ниже — цены, условия и всё, что нужно для создания карточки на Wildberries.</p>
+   ${items.map(it=>{const p=it.p,c=p.card||{},sp=kpSpecs(p);return `<section class="kpi2">
+    ${p.photo?`<img src="${p.photo}" alt="">`:`<div class="noph">фото по запросу</div>`}
+    <div><h2>${esc(c.title||p.name)}</h2>${c.art?`<p class="kpm">Артикул: ${esc(c.art)}</p>`:""}
+     <table class="kpt"><tr><th>Цена за шт</th>${it.tiers.map(([q])=>`<th>от ${q} шт</th>`).join("")}</tr><tr><td></td>${it.tiers.map(([,pr])=>`<td><b>${rub(pr)}</b></td>`).join("")}</tr></table>
+     <p class="kpm">Мин. партия ${it.moq} шт${it.days?` · изготовление ≈ ${it.days} дн.`:""}${it.G?` · рекомендуемая цена на WB ≈ ${rub(it.G)}`:""}</p>
+     ${it.G&&it.partner>0?`<p class="kpgood">Ваша прибыль при продаже на WB ≈ ${rub(it.partner)} со штуки (${pct(it.partner/it.G,0)} от цены) после комиссии, логистики, рекламы и налога.</p>`:""}
+     ${sp.length?`<table class="kps">${sp.map(([k,x])=>`<tr><td>${esc(k)}</td><td>${esc(x)}</td></tr>`).join("")}</table>`:""}
+     ${c.desc?`<p class="kpd">${esc(c.desc).replace(/\n/g,"<br>")}</p>`:""}</div></section>`}).join("")}
+   <section class="kpc"><h2>Условия</h2><ul><li>Оплата: ${esc(u.pay||"по договорённости")}</li><li>Доставка: ${esc(u.ship||"по договорённости")}</li><li>Упаковка: индивидуальная, готова к маркировке под WB</li>${u.note?`<li>${esc(u.note)}</li>`:""}<li>Цены действуют до ${till}</li></ul>
+   <p class="kpm">Расчёт прибыли — ориентир: комиссия WB по предмету, реклама ${pct(P.ads,0)}, налог ${pct(P.partnerTax,0)}; фактические ставки зависят от вашего кабинета.</p></section>
+  </div>`;
+  document.body.appendChild(v);v.querySelector("#pv_close").onclick=()=>v.remove();v.querySelector("#pv_print").onclick=()=>{const t=document.title;document.title=no+(b?" "+b.name:"");window.print();setTimeout(()=>document.title=t,500)};
+}
+async function kpExcel(items,bid){
+  let X;try{X=await loadXLSX()}catch(e){toast(e.message);return}
+  const b=bid?S.buyers.find(x=>x.id===bid):null,no=kpNum();
+  const head1=["Наименование","Артикул продавца","Цена опт, ₽/шт","Мин. партия, шт","Скидки за объём","Изготовление, дн.","Рекомендуемая цена на WB, ₽","Прибыль партнёра ≈ ₽/шт","Маржа партнёра ≈ %"];
+  const rows1=items.map(it=>[it.p.card.title||it.p.name,it.p.card.art||"",it.price,it.moq,it.tiers.slice(1).map(([q,v])=>`от ${q} шт — ${v} ₽`).join("; "),it.days||"",it.G?Math.round(it.G):"",it.partner>0?Math.round(it.partner):"",it.G&&it.partner>0?Math.round(it.partner/it.G*100):""]);
+  const extra=[...new Set(items.flatMap(it=>(it.p.card.chars||[]).map(x=>x.k).filter(Boolean)))];
+  const head2=["Предмет","Наименование","Артикул продавца","Бренд","Описание","Цвет","Материал изделия","Комплектация","Страна производства","Длина упаковки, см","Ширина упаковки, см","Высота упаковки, см","Вес товара с упаковкой (кг)","Длина изделия, см","Ширина изделия, см","Высота изделия, см","Вес товара без упаковки (г)","Баркод","ТН ВЭД","Декларация / сертификат","Рекомендуемая цена, ₽",...extra];
+  const rows2=items.map(it=>{const p=it.p,c=p.card||{},sz=c.size||[],pk=c.pack||[],g=calc(p).c.grams;
+    return [(p.subj&&p.subj.name)||"",c.title||p.name,c.art||"",c.brand||"",c.desc||"",c.color||colorGuess(p),c.mat||matGuess(p),c.kit||"",c.country||"Россия",pk[0]||"",pk[1]||"",pk[2]||"",c.packW>0?Math.round(c.packW)/1000:"",sz[0]||"",sz[1]||"",sz[2]||"",c.weight>0?c.weight:(g>0?Math.round(g):""),c.barcode||"",c.tnved||"",c.doc||"",it.G?Math.round(it.G):"",...extra.map(k=>((c.chars||[]).find(x=>x.k===k)||{}).v||"")]});
+  const u=S.sup,info=[[`Коммерческое предложение ${no}`],[u.name||"",u.inn?"ИНН "+u.inn:"",u.phone||"",u.mail||""],[b?"Для: "+b.name:""],[`Оплата: ${u.pay||""}`],[`Доставка: ${u.ship||""}`],u.note?[u.note]:[],[]];
+  const wb=X.utils.book_new();
+  const s1=X.utils.aoa_to_sheet([...info,head1,...rows1]);s1["!cols"]=head1.map((h,i)=>({wch:i===0?36:i===4?34:16}));X.utils.book_append_sheet(wb,s1,"КП");
+  const s2=X.utils.aoa_to_sheet([head2,...rows2]);s2["!cols"]=head2.map(h=>({wch:h==="Описание"?60:Math.max(12,h.length+2)}));X.utils.book_append_sheet(wb,s2,"Для карточки WB");
+  X.writeFile(wb,`${no}${b?" "+b.name.replace(/[\\/:*?"<>|]/g,"_"):""}.xlsx`);toast("Файл Excel сохранён в «Загрузки»");
+}
+
 /* ================= план ================= */
 function printHours(m){
   let h=0,def=0;
@@ -2148,7 +2301,7 @@ function planUpdate(){
 /* ================= ещё: параметры и копии ================= */
 const PDEF=[["Себестоимость",[["ppk","Пластик по умолчанию","₽/кг, для нового пластика и без привязки",1],["elec","Электричество","₽ за час печати",1],["labor","Работа","₽ за час печати",1],["wear","Износ принтера","₽ за час печати",1],["defect","Брак","% от пластика, э/э, износа",100],["delivery","Доставка до WB/ПВЗ","₽ на шт",1]]],
  ["Wildberries",[["tax","Налог самозанятого","% от цены после скидки",100],["acq","Эквайринг","%",100],["buy","Выкуп по умолчанию","%",100],["lb","Логистика база","₽",1],["disc","Скидка для новых изделий","%",100],["comm","Комиссия для новых","%",100],["ads","Реклама для новых","%",100],["spp","СПП","% (для справки)",100]]],
- ["Принтер и опт",[["printers","Принтеров","шт, для загрузки",1],["printHours","Часов печати в день","на 1 принтер, для плана",1],["stockDays","Запас, дней","сколько дней продаж держать на складе",1],["load","Загрузка принтера","% времени",100],["optTax","Налог при опте ИП/юрлицу","%",100],["partnerProfit","Прибыль партнёра","%",100],["partnerTax","Налог партнёра","%",100]]]];
+ ["Принтер и опт",[["printers","Принтеров","шт, для загрузки",1],["printHours","Часов печати в день","на 1 принтер, для плана",1],["stockDays","Запас, дней","сколько дней продаж держать на складе",1],["load","Загрузка принтера","% времени",100],["optTax","Налог при опте ИП/юрлицу","%",100],["optPerH","Мин. ₽/час на опте","ниже — опт невыгоден вам",1],["partnerMargin","Маржа партнёра","% от его цены продажи, рынок ждёт 25–30%",100],["partnerExtra","Прочие расходы партнёра","% цены: хранение, упаковка, возвраты",100],["partnerTax","Налог партнёра","%",100]]]];
 function moreHtml(){
   const last=(()=>{try{return localStorage.getItem("master3d_lastbackup")}catch(e){return null}})();
   const wc=wbLoadCache(),cfg=S.wbcfg;
@@ -2163,7 +2316,7 @@ function moreHtml(){
   const histN=S.money.filter(m=>String(m.ref||"").startsWith("hist:")).length;
   const histCard=`<div class="card"><h2>Импорт истории из Excel</h2><p>Заказы вне WB (опт, заказы) и расходы из вашей Excel-таблицы: строки «Статус, Дата, Наименование, Кол-во, Прибыль, Розничная цена» и блок «Расходы». Прибыль разложится по месяцам и попадёт в кассу и окупаемость. Загружайте обновлённый файл когда угодно — прошлый импорт заменится.</p>${histN?`<p>Сейчас загружено записей: ${histN}. Повторный импорт заменит их.</p>`:""}
    <label class="btn" for="histIn">Выбрать файл .xlsx</label><input id="histIn" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>`;
-  return themeCardHtml()+wbCard+syncCardHtml()+ordCardHtml()+histCard+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
+  return themeCardHtml()+wbCard+syncCardHtml()+ordCardHtml()+supCardHtml()+histCard+`<div class="card"><h2>Резервная копия</h2><p>Всё хранится только в этом телефоне. Раз в неделю сохраняйте копию в файл и отправляйте себе в Telegram.</p><p>${last?"Последняя копия: "+esc(new Date(+last).toLocaleString("ru-RU")):"Копию ещё не делали."}</p>
    <div class="row2"><button class="btn main" type="button" data-act="exportJson">Сохранить копию в файл</button></div></div>
   <div class="card"><h2>Загрузить копию</h2><p>Подходят копии этого приложения и старых «Склад 3D» и «Цена 3D». Две старые копии можно загрузить по очереди — они объединятся.</p>
    <label class="btn" for="fileIn">Выбрать файл .json</label><input id="fileIn" type="file" accept=".json,application/json,text/plain" hidden>
@@ -2252,6 +2405,7 @@ $("#main").addEventListener("click",e=>{
   if(act==="planMail"){S.ordCfg.planMail=!S.ordCfg.planMail;save();renderMain();toast(S.ordCfg.planMail?"План будет приходить в 17:30":"Письма с планом выключены")}
   if(act==="goPlan"){view="plan";salesTab="plan";render()}
   if(act==="fbs")openFbs();
+  if(act==="kpMany")openKP([]);
   if(act==="factSetLog"||act==="factSetBuy"){const f=factFor(draft);if(f){if(act==="factSetLog"){$("#f_lb").value=dec(Math.round(f.log*(draft.wb.buy||S.p.buy)*100)/100)}else{$("#f_buy").value=pin(f.buy)}readForm();markDirty();update();toast("Подставлено. Не забудьте сохранить")}}
   if(act==="goCash"){view="plan";salesTab="cash";render()}
   if(act==="goSales"){view="plan";salesTab="sales";render()}
@@ -2279,6 +2433,7 @@ $("#main").addEventListener("click",e=>{
 $("#main").addEventListener("change",e=>{
   if(e.target.id==="wb_url"){const nu=e.target.value.trim();if(nu!==S.wbcfg.url){S.wbcfg.url=nu;save();renderMain()}}
   if(e.target.dataset&&e.target.dataset.wdg){const k=e.target.dataset.wdg;let w=(S.ui.widgets||[]).filter(x=>x!==k);if(e.target.checked){w.push(k);w=WIDGETS.map(x=>x[0]).filter(x=>w.includes(x))}S.ui.widgets=w;save();toast(e.target.checked?"Виджет добавлен на главный экран":"Виджет убран")}
+  if(e.target.dataset&&e.target.dataset.sup){const k=e.target.dataset.sup;let val=e.target.value.trim();if(k==="days"||k==="moq"){const x=num(val);val=x>0?Math.floor(x):(k==="days"?14:10)}S.sup[k]=val;save();toast("Сохранено")}
   if(e.target.id==="ui_iconcolor"){S.ui.iconColor=e.target.value;save();applyIcon();renderMain();toast("Цвет ярлыка выбран")}
   if(e.target.id==="tax_bonus"){const v=num(e.target.value);S.tax.bonus=isFinite(v)&&v>=0?v:null;save();renderMain();toast("Остаток вычета сохранён")}
   if(e.target.id==="wb_wh"){S.wbcfg.wh=e.target.value;save();toast("Склад выбран. Тариф запомнится при следующем обновлении")}
@@ -2293,7 +2448,7 @@ $("#main").addEventListener("input",e=>{
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
 
 applyTheme();
-window.__m={parseSliceInfo,unzipEntry,factFor,factProfit,fbsCall,openFbs,buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
+window.__m={optCalc,optTiers,kpItems,openKP,showKP,parseSliceInfo,unzipEntry,factFor,factProfit,fbsCall,openFbs,buyFact,prodLinks,normUrl,ordersApply,ordersFetch,todayPlan,ordRate,cancelledBeforeShip,defRate,parseHistory,importHistoryFile,doubleCount,printHours,buyerPrice,buyerStats,dealProfit,payback,taxPlan,monthCash,calc,S:()=>S,migrate,wholesale,wbPropose,wbT,SY:()=>SY,salesAgg};
 render();
 if(SY.on)setTimeout(syncCheck,800);
 setInterval(()=>{if(SY.on&&document.visibilityState==="visible")syncCheck()},5*60000);
