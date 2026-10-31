@@ -232,6 +232,12 @@
 #printView .kpd{font-size:12px;color:#333}
 #printView .kpc{border-top:1px solid #ddd;padding-top:8px;break-inside:avoid}#printView .kpc ul{margin:4px 0 6px;padding-left:18px}
 @media print{html,body{background:#fff!important}body::before{display:none}#printView.a4{padding:10mm}}
+
+.optbar{display:flex;flex-direction:column;gap:6px}
+.optrange{position:relative;height:12px;border-radius:99px;background:var(--sunk)}
+.optrange i{position:absolute;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--warn),var(--ok))}
+.optrange b{position:absolute;top:-5px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--surface);border:4px solid var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.optlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}.optlbl b{font:700 15px var(--f-num);color:var(--fg)}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-body);-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -439,7 +445,7 @@ textarea.inp{min-height:100px;font:12px/1.4 var(--f-num)}
 "use strict";
 const KEY="master3d_v1";
 const CATALOG=[{"name":"Бургер-пресс","sku":"","g":46.47,"h":1.36,"hw":0,"pin":0,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1890,"disc":0.66,"comm":0.39,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для зубных счеток","sku":"","g":51.48,"h":1.86,"hw":0,"pin":0.6,"pout":7.12,"mark":1.3,"ppk":null,"wb":{"pb":1882,"disc":0.62,"comm":0.42,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для наушников (белый)","sku":"","g":53.68,"h":1.66,"hw":0,"pin":0,"pout":11,"mark":1.3,"ppk":null,"wb":{"pb":1892,"disc":0.7,"comm":0.34,"ads":0.18,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для наушников (чёрный)","sku":"","g":53.68,"h":1.66,"hw":0,"pin":0,"pout":11,"mark":1.3,"ppk":null,"wb":{"pb":1892,"disc":0.7,"comm":0.34,"ads":0.18,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Держатель для туалетной бумаги","sku":"","g":43.74,"h":1.374,"hw":1.84,"pin":0.6,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1499,"disc":0.52,"comm":0.43,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Заглушки машины","sku":"","g":1.06,"h":0.3866,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Инь и янь (20 шт.)","sku":"","g":24.08,"h":1.07,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1000,"disc":0.55,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка для Яндекс станции Миди (жёлтый)","sku":"","g":50.42,"h":1.53,"hw":2.54,"pin":0,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.63,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка для Яндекс станции Миди (чёрный)","sku":"","g":50.42,"h":1.53,"hw":2.54,"pin":0.6,"pout":12.04,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.63,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (белая)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (жёлтая)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Полка универсальная (чёрная)","sku":"","g":65.7,"h":1.89,"hw":2.54,"pin":0.6,"pout":12,"mark":1.3,"ppk":null,"wb":{"pb":1800,"disc":0.61,"comm":0.35,"ads":0.18,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговица сердце (30 шт.) 22,5 мм","sku":"","g":19.67,"h":0.86,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1290,"disc":0.7,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговка \"Звезда\" 30 шт.","sku":"","g":16.68,"h":0.83,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Пуговка круг с бортиком синия (30 шт.) 15 мм","sku":"","g":12.27,"h":0.71,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":null},{"name":"Пуговка сердце (30 шт.) 15 мм","sku":"","g":8.2964,"h":0.55,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1274,"disc":0.72,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговка сердце (30 шт.) 20 мм","sku":"","g":17.62,"h":0.9592,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":1278,"disc":0.68,"comm":0.43,"ads":0.1,"lb":49.3,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Пуговица сердце 2.0 (10 шт.) 20 мм.","sku":"","g":5.339,"h":0.3438,"hw":0,"pin":0.6,"pout":0.64,"mark":1.3,"ppk":null,"wb":{"pb":500,"disc":0.4,"comm":0.43,"ads":0.1,"lb":54.4,"buy":0.9,"acc":0,"spp":0.15}},{"name":"Чёпики Агаева G","sku":"","g":0.3219,"h":0.029,"hw":0,"pin":0,"pout":0,"mark":0,"ppk":null,"wb":null},{"name":"Чёпики ГРАТ","sku":"","g":0.40183,"h":0.045729,"hw":0,"pin":0,"pout":0,"mark":0,"ppk":null,"wb":null}];
-const DEF={defMode:"auto",printers:1,printHours:14,stockDays:14,ppk:685,elec:1.27,delivery:10,labor:10,wear:7,defect:0.05,tax:0.04,acq:0.02,buy:0.90,load:0.65,optTax:0.06,partnerProfit:0.10,partnerMargin:0.25,partnerExtra:0.05,optPerH:70,partnerTax:0.06,lb:49.3,disc:0.6,comm:0.35,ads:0.18,spp:0.15};
+const DEF={defMode:"auto",printers:1,printHours:14,stockDays:14,ppk:685,elec:1.27,delivery:10,labor:10,wear:7,defect:0.05,tax:0.04,acq:0.02,buy:0.90,load:0.65,optTax:0.06,partnerProfit:0.10,partnerMargin:0.25,partnerExtra:0.05,optPerH:70,optMaxK:3,optMinM:0.3,optMaxM:1,partnerTax:0.06,lb:49.3,disc:0.6,comm:0.35,ads:0.18,spp:0.15};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1057,8 +1063,9 @@ function update(){
   $("#costSec").innerHTML=`<h2>Себестоимость <small>${rub(r.c.total,2)} за 1 шт</small></h2><div class="lines">${r.c.lines.filter(l=>l.v>0).map(l=>`<div class="ln"><span>${esc(l.t)}${l.h?` <small>· ${esc(l.h)}</small>`:""}</span><span>${rub(l.v,2)}</span></div>`).join("")}${miss?`<p class="hint neg">${miss} поз. из состава без цены — откройте их в «Материалах» и укажите цену.</p>`:""}${dbl.length?`<div class="verdict warn">Возможно, посчитано дважды: ${dbl.map(esc).join("; ")}. Уберите лишнее из «Расходов без учёта на складе».</div>`:""}<div class="ln total"><span>Итого</span><span>${rub(r.c.total,2)}</span></div></div>`;
   const ws=$("#wbSec"),ts=$("#targetSec"),os=$("#optSec");
   drawFact(tmp,w,r);
-  if(!w||!ok){ws.hidden=ts.hidden=os.hidden=true;return}
-  ws.hidden=ts.hidden=os.hidden=false;
+  os.hidden=!ok;if(ok){os.innerHTML=optSecHtml(tmp,d);bindOpt()}
+  if(!w||!ok){ws.hidden=ts.hidden=true;return}
+  ws.hidden=ts.hidden=false;
   const seg=[["Комиссия WB",w.comm,"--c2"],["Реклама",w.ads,"--c4"],["Логистика",w.L+w.acc,"--c3"],["Налог и эквайринг",w.tax+w.U,"--c5"],["Себестоимость",r.c.total,"--c6"],["Прибыль",Math.max(0,w.Q),"--c1"]];
   const tot=seg.reduce((a,s)=>a+s[1],0)||1;
   const verdict=w.Q<0?["bad","Изделие в убытке. Поднимите цену до скидки или уменьшите скидку и рекламу."]
@@ -1088,23 +1095,46 @@ function update(){
   const tm=()=>{const mg=num($("#f_tm").value)/100,o=isFinite(mg)?priceForMargin(r.c.total,d.wb,mg):null;
     $("#tmOut").innerHTML=o?`<div class="ln"><span>до скидки</span><span><b>${rub(o.pb)}</b></span></div><div class="ln"><span>после скидки</span><span>${rub(o.G)}</span></div>`:`<span class="hint">Недостижимо при этих комиссии и рекламе</span>`};
   $("#f_tm").oninput=tm;tm();
-  os.innerHTML=optSecHtml(tmp,d);
-  const os_=$("#opt_set");if(os_)os_.onclick=()=>{const o=optCalc(cleanItem(draft));$("#f_opt").value=dec(o.rec);readForm();markDirty();update();toast("Базовая оптовая цена: "+rub(o.rec)+". Сохраните изделие")};
-  const kp1=$("#kp_one");if(kp1)kp1.onclick=()=>{if(dirty&&!saveDraft(false,true))return;openKP([editId])};
 }
 function optSecHtml(tmp,d){
-  const P=S.p,o=optCalc(tmp),w=o.w,cur=d.opt>0?d.opt:null,moq=num(d.card&&d.card.moq)>0?num(d.card.moq):S.sup.moq||10;
-  const row=(t,v)=>{if(!(v>0))return "";const m=o.mine(v),pt=o.partner(v);return `<tr><td>${t}</td><td>${rub(v)}</td><td class="${m<0?"bad":""}">${rub(m)}</td><td>${o.h?n1(m/o.h,0):"—"}</td><td class="${pt<0?"bad":""}">${rub(pt)}</td><td>${pct(pt/w.G,0)}</td><td>×${n1(w.G/v,1)}</td></tr>`};
-  const verdict=!o.ok?`<div class="verdict bad">Опт по этому изделию невыгоден: при вашем минимуме ${rub(o.floor)} партнёру останется ${rub(o.partner(o.floor))} с продажи (${pct(o.partner(o.floor)/w.G,0)}), а рынку нужно ≈ ${pct(P.partnerMargin,0)}. Варианты: поднять цену на WB, ускорить печать или продавать только самому.</div>`
-    :`<div class="verdict ok">Рекомендуемая цена <b>${rub(o.rec)}</b>: партнёр зарабатывает ${pct(P.partnerMargin,0)} с цены на WB, вы — ${rub(o.mine(o.rec))} с штуки (${n1(o.mine(o.rec)/o.h,0)} ₽/час). Торговаться можно до ${rub(o.floor)}.</div>`;
-  return `<h2>Оптовая цена <small>ваш налог ${pct(P.optTax,0)}</small></h2>
-   <div class="lines"><div class="ln"><span>Ваш минимум <small>· себестоимость + ${n1(P.optPerH,0)} ₽ за час печати + налог</small></span><span>${rub(o.floor)}</span></div>
-   <div class="ln"><span>Потолок для партнёра <small>· его маржа ${pct(P.partnerMargin,0)} при цене ${rub(w.G)}</small></span><span>${rub(o.ceil)}</span></div></div>${verdict}
-   <div class="scroll"><table class="t fact"><thead><tr><th>Цена</th><th>₽/шт</th><th>Вам</th><th>₽/час</th><th>Партнёру</th><th>Маржа</th><th>Наценка</th></tr></thead><tbody>
-   ${row("Минимум",o.floor)}${o.rec?row("<b>Рекомендуемая</b>",o.rec):""}${cur&&cur!==o.rec&&cur!==o.floor?row("Ваша базовая",cur):""}</tbody></table></div>
-   ${o.rec?`<p class="hint">Скидки за объём (не ниже минимума): ${optTiers(o.rec,o.floor,moq).map(([q,v])=>`от ${q} шт — ${rub(v)}`).join(" · ")}.</p>`:""}
-   <div class="row2">${o.rec&&cur!==o.rec?`<button type="button" class="btn small" id="opt_set">Сделать базовой оптовой ценой</button>`:""}${editId?`<button type="button" class="btn small main" id="kp_one">Коммерческое предложение</button>`:""}</div>
-   <p class="hint">«Партнёру» — сколько у него останется со штуки после комиссии и рекламы WB, логистики, эквайринга, налога ${pct(P.partnerTax,0)}, прочих расходов ${pct(P.partnerExtra,0)} и закупки у вас. Наценка — цена на WB ÷ оптовая; селлеры обычно ищут ×2,5 и выше. Ставки — «Ещё» → «Параметры: Принтер и опт».</p>`;
+  const P=S.p,o=optCalc(tmp),w=o.w,base=d.opt>0?d.opt:o.max,span=Math.max(1,o.max-o.min),pos=v=>Math.max(0,Math.min(100,(v-o.min)/span*100));
+  const maxDisc=base>0?Math.max(0,1-o.min/base):0;
+  const discs=[0.05,0.1,0.15,0.2].filter(x=>x<maxDisc+0.0001);
+  return `<h2>Оптовая цена <small>себестоимость ${rub(o.c,2)}</small></h2>
+   <div class="optbar"><div class="optrange"><i style="left:0;right:0"></i>${o.max>o.min?`<b style="left:${pos(base)}%" title="ваш прайс"></b>`:""}</div>
+    <div class="optlbl"><span>мин<br><b>${rub(o.min)}</b></span>${o.max>o.min?`<span style="text-align:center">прайс<br><b>${rub(base)}</b></span>`:""}<span style="text-align:right">макс<br><b>${rub(o.max)}</b></span></div></div>
+   <div class="lines"><div class="ln"><span><b>Минимум ${rub(o.min)}</b> <small>· себестоимость + ${pct(P.optMinM!=null?P.optMinM:0.3,0)} наценки и налог ${pct(P.optTax,0)}; вам ${rub(o.mine(o.min))} с шт${o.h?`, ${n1(o.mine(o.min)/o.h,0)} ₽ за час печати`:""}</small></span><span></span></div>
+   <div class="ln"><span><b>Максимум ${rub(o.max)}</b> <small>· ${esc(o.maxSrc)}; вам ${rub(o.mine(o.max))} с шт</small></span><span></span></div></div>
+   ${o.tight?`<div class="verdict warn">Оптовику, который продаёт на WB по ${rub(w.G)}, даже ваш минимум дорог — ему останется ${pct(Math.max(0,o.partner(o.min))/w.G,0)} вместо ${pct(P.partnerMargin,0)}. Коридор подходит для магазинов и продаж не на WB.</div>`:""}
+   <div class="grid2"><label class="field"><span>Ваш прайс, ₽/шт</span><input id="f_opt2" class="inp" inputmode="decimal" value="${d.opt>0?dec(d.opt):""}" placeholder="${o.max}"><small>${d.opt>0?(d.opt<o.min?`<span class="neg">ниже минимума</span>`:d.opt>o.max?"выше максимума":"в коридоре"):"пусто — прайс = максимум"}</small></label>
+   <div class="field"><span>Скидки покупателям</span><div class="lines" style="padding-top:4px">${discs.length?discs.map(x=>`<div class="ln"><span>−${pct(x,0)}</span><span>${rub(Math.round(base*(1-x)))}</span></div>`).join(""):""}<div class="ln"><span>предел</span><span>−${pct(maxDisc,0)}</span></div></div></div></div>
+   <p class="hint">Скидку задайте в карточке покупателя («Деньги» → «Касса» → «Покупатели»). Цена считается от прайса и не опускается ниже минимума. Все изделия сразу — «Оптовый прайс» там же.</p>
+   ${w?`<details><summary class="hint" style="cursor:pointer">Подробнее: сколько заработаете вы и оптовик</summary><div class="scroll"><table class="t fact"><thead><tr><th>Цена</th><th>Вам с шт</th><th>₽/час</th><th>Оптовику</th><th>Наценка</th></tr></thead><tbody>
+    ${[["Минимум",o.min],["Прайс",base],["Максимум",o.max]].filter((x,i,a)=>a.findIndex(y=>y[1]===x[1])===i).map(([t,v])=>{const m=o.mine(v),pt=o.partner(v);return `<tr><td>${t} ${rub(v)}</td><td>${rub(m)}</td><td>${o.h?n1(m/o.h,0):"—"}</td><td class="${pt<0?"bad":""}">${rub(pt)} (${pct(pt/w.G,0)})</td><td>×${n1(w.G/v,1)}</td></tr>`}).join("")}
+   </tbody></table></div><p class="hint">«Оптовику» — что у него останется со штуки на WB после комиссии, рекламы, логистики, эквайринга, налога ${pct(P.partnerTax,0)} и прочих расходов ${pct(P.partnerExtra,0)}. </p></details>`:""}
+   <p class="hint">Границы коридора — «Ещё» → «Параметры: Принтер и опт» (мин. и макс. наценка).</p>
+   ${editId?`<div class="row2"><button type="button" class="btn small main" id="kp_one">Коммерческое предложение</button></div>`:""}`;
+}
+function bindOpt(){
+  const f=$("#f_opt2");if(f)f.onchange=()=>{const v=num(f.value);$("#f_opt").value=v>0?dec(v):"";readForm();markDirty();update();toast(v>0?"Прайс "+rub(v)+". Сохраните изделие":"Прайс = максимум")};
+  const kp1=$("#kp_one");if(kp1)kp1.onclick=()=>{if(dirty&&!saveDraft(false,true))return;openKP([editId])};
+}
+function optPriceList(bid){
+  const b=bid?S.buyers.find(x=>x.id===bid):null;
+  const L=S.products.filter(p=>p.h>0).slice().sort((a,c)=>a.name.localeCompare(c.name,"ru")).map(p=>{const o=optCalc(p);if(!(o.c>0))return null;const base=p.opt>0?p.opt:o.max,bp=b?buyerPrice(b,p):null;return {p,o,base,bp}}).filter(Boolean);
+  return L;
+}
+function openPriceList(bid){
+  openSheet(`<h2>Оптовый прайс</h2><p class="sub" style="margin:0">Коридор цены по каждому изделию. Выберите покупателя — увидите его цены со скидкой.</p>
+   <label class="field"><span>Покупатель</span><select id="pl_b" class="inp"><option value="">— только коридор —</option>${S.buyers.map(b=>`<option value="${b.id}" ${b.id===bid?"selected":""}>${esc(b.name)}${b.disc>0?" (−"+pct(b.disc,1)+")":""}</option>`).join("")}</select></label>
+   <div class="scroll" id="pl_t"></div>
+   <p class="hint">Мин и макс — себестоимость плюс минимальная и максимальная наценка (меняются в «Ещё» → «Параметры»). Прайс — ваша базовая цена (пусто = максимум). Красным — скидка упёрлась в минимум. ⚠ WB — селлеру, который продаёт на WB, даже минимум дорог: такой цене подходят магазины и продажи вне WB.</p>
+   <div class="row2"><button type="button" class="btn" id="pl_kp">Коммерческое предложение</button><button type="button" class="btn ghost" id="pl_x">Закрыть</button></div>`,s=>{
+    const draw=()=>{const bv=s.querySelector("#pl_b").value,L=optPriceList(bv);
+      s.querySelector("#pl_t").innerHTML=`<table class="t fact" style="font-size:12.5px"><thead><tr><th>Изделие</th><th>Мин</th><th>Макс</th><th>${bv?"Ему":"Прайс"}</th></tr></thead><tbody>${L.map(x=>`<tr><td>${esc(x.p.name)}<br><small class="hint">себест. ${rub(x.o.c)}${bv&&x.base!==x.o.max?` · прайс ${rub(x.base)}`:""}${x.o.tight?" · ⚠ WB":""}</small></td><td>${rub(x.o.min)}</td><td>${rub(x.o.max)}</td><td class="${x.bp&&x.bp.floor?"bad":""}"><b>${bv?(x.bp?rub(x.bp.price):"—"):rub(x.base)}</b></td></tr>`).join("")}</tbody></table>`};
+    draw();s.querySelector("#pl_b").onchange=draw;s.querySelector("#pl_x").onclick=closeSheet;
+    s.querySelector("#pl_kp").onclick=()=>{const bv=s.querySelector("#pl_b").value;openKP([],bv||null)};
+  });
 }
 function saveDraft(leave,silent){
   readForm();
@@ -1629,20 +1659,25 @@ function buyerByName(n){n=String(n||"").trim().toLowerCase();return n?S.buyers.f
 const r5=v=>Math.floor(v/5)*5;
 function optCalc(p,x){
   const P=S.p,r=calc(p),c=r.c.total,h=p.h||0,w=r.w;
-  const floor=Math.ceil((c+(P.optPerH||0)*h)/(1-P.optTax)/5)*5;
+  const up5=v=>Math.ceil(v/5)*5,floor=up5(c*(1+(P.optMinM!=null?P.optMinM:0.3))/(1-P.optTax)),maxC=Math.max(floor,r5(c*(1+(P.optMaxM!=null?P.optMaxM:1))/(1-P.optTax)));
   const res={c,h,floor,w,ceil:null,rec:null,ok:false};
+  res.min=floor;
   if(w){const b=p.wb,ads=b.ads!=null?b.ads:P.ads;
     res.keep=w.G*(1-b.comm-ads-P.acq-P.partnerTax-P.partnerExtra)-w.L-w.acc; /* что остаётся партнёру с продажи до покупки товара */
     res.ceil=r5(res.keep-w.G*P.partnerMargin);res.ok=res.ceil>=floor;res.rec=res.ok?res.ceil:null}
+  res.tight=!!w&&res.ceil<floor; /* оптовику на WB не хватает маржи даже при минимальной цене */
+  res.capped=!!w&&!res.tight&&res.ceil<maxC;
+  res.max=res.capped?Math.max(floor,res.ceil):maxC;
+  res.maxSrc=res.capped?`снижен до ${rub(res.max)}: дороже оптовик на WB не заработает ${pct(P.partnerMargin,0)} при цене ${rub(w.G)}`:`себестоимость + ${pct(P.optMaxM!=null?P.optMaxM:1,0)} наценки и налог ${pct(P.optTax,0)}`;
   res.mine=v=>v-c-v*P.optTax;
   res.partner=v=>res.keep!=null?res.keep-v:null;
   return res}
 function optTiers(base,floor,moq){const t=[[moq,base]];for(const [k,d] of [[5,0.05],[10,0.1]]){const v=Math.max(floor,r5(base*(1-d)));if(v<t[t.length-1][1])t.push([moq*k,v])}return t}
-function baseOpt(p){if(p.opt>0)return {v:p.opt,src:"базовая оптовая цена"};const o=optCalc(p);if(o.rec)return {v:o.rec,src:"рекомендуемая оптовая цена"};if(o.c>0&&p.h>0)return {v:o.floor,src:"минимальная оптовая цена"};return null}
+function baseOpt(p){if(p.opt>0)return {v:p.opt,src:"ваш прайс"};const o=optCalc(p);if(o.c>0&&p.h>0)return {v:o.max,src:"максимальная оптовая цена"};return null}
 function buyerPrice(b,p){
   if(b.prices&&b.prices[p.id]>0)return {price:b.prices[p.id],src:"цена из прайса покупателя"};
   const base=baseOpt(p);if(!base)return null;
-  if(b.disc>0)return {price:Math.round(base.v*(1-b.disc)),src:`${base.src} ${rub(base.v)} − скидка ${pct(b.disc,1)}`};
+  if(b.disc>0){const o=optCalc(p),raw=Math.round(base.v*(1-b.disc));if(o.c>0&&p.h>0&&raw<o.min)return {price:o.min,src:`${base.src} ${rub(base.v)} − скидка ${pct(b.disc,1)} упёрлась в минимум`,floor:true};return {price:raw,src:`${base.src} ${rub(base.v)} − скидка ${pct(b.disc,1)}`}}
   return {price:base.v,src:base.src};
 }
 function dealProfit(d){const c=d.cost!=null?d.cost:(find("products",d.pid)?cost(find("products",d.pid)).total*d.q:0);return d.sum-c-d.sum*(d.tax||0)}
@@ -1660,9 +1695,10 @@ function openBuyers(){
   const list=S.buyers.map(b=>({b,a:buyerStats(b),mm:buyerStats(b,cm)})).sort((x,y)=>(y.a.last||0)-(x.a.last||0));
   openSheet(`<h2>Покупатели</h2><p class="sub">Оптовые покупатели: прайс, налог, долги и сколько каждый принёс.</p>
    ${list.length?`<div class="subjlist">${list.map(({b,a,mm})=>`<button type="button" data-buyer="${b.id}"><span><b>${esc(b.name)}</b><small>налог ${TAX_TXT[String(b.tax)]||"—"}${b.disc>0?" · скидка "+pct(b.disc,1):""} · всего ${rub(a.sum)}${mm.sum?" · в этом мес. "+rub(mm.sum):""}</small></span>${a.debt?`<span class="tag warn">долг ${rub(a.debt)}</span>`:`<span class="tag mute">${a.n} сд.</span>`}</button>`).join("")}</div>`:`<p class="hint">Пока никого нет. Покупатель появится сам при первой оптовой отгрузке, или добавьте его сейчас.</p>`}
-   <div class="row2"><button type="button" class="btn main" id="b_new">+ Новый покупатель</button><button type="button" class="btn" id="b_close">Закрыть</button></div>`,s=>{
+   <div class="row2"><button type="button" class="btn main" id="b_new">+ Новый покупатель</button><button type="button" class="btn" id="b_pl">Оптовый прайс</button><button type="button" class="btn" id="b_close">Закрыть</button></div>`,s=>{
     s.querySelector("#b_close").onclick=closeSheet;
     s.querySelector("#b_new").onclick=()=>openBuyer(null);
+    s.querySelector("#b_pl").onclick=()=>openPriceList(null);
     s.querySelectorAll("[data-buyer]").forEach(x=>x.onclick=()=>openBuyer(x.dataset.buyer));
   });
 }
@@ -1678,10 +1714,10 @@ function openBuyer(bid){
    <div class="grid2"><label class="field"><span>Название / имя</span><input id="bu_name" class="inp" value="${esc(b.name)}" placeholder="ИП Петров" ${isNew?"autofocus":""}></label>
    <label class="field"><span>Налог по умолчанию</span><select id="bu_tax" class="inp"><option value="0.06" ${b.tax===0.06?"selected":""}>6% — ИП, организация</option><option value="0.04" ${b.tax===0.04?"selected":""}>4% — частное лицо</option><option value="0" ${!b.tax?"selected":""}>Без налога</option></select></label>
    <label class="field"><span>Телефон / контакт</span><input id="bu_phone" class="inp" value="${esc(b.phone)}" inputmode="tel"></label>
-   <label class="field"><span>Скидка от базовой цены</span><div class="suf"><input id="bu_disc" class="inp" type="text" inputmode="decimal" value="${b.disc>0?pin(b.disc):""}" placeholder="0"><i>%</i></div><small>для изделий без своей цены</small></label></div>
+   <label class="field"><span>Скидка от прайса</span><div class="suf"><input id="bu_disc" class="inp" type="text" inputmode="decimal" value="${b.disc>0?pin(b.disc):""}" placeholder="0"><i>%</i></div><small>не опустит цену ниже минимума</small></label></div>
    <label class="field"><span>Заметка</span><input id="bu_note" class="inp" value="${esc(b.note)}" placeholder="Например: оплата по факту, забирает сам"></label>
-   <div class="box"><h3>Прайс покупателя, ₽ за шт</h3><p class="hint">Пустое поле — цена считается от базовой оптовой со скидкой покупателя.</p>
-    ${prods.map(p=>{const bp=buyerPrice({...b,prices:{}},p);return `<div class="ln" style="align-items:center"><span>${esc(p.name)}<br><small>${bp?"без своей цены: "+rub(bp.price):"нет базовой цены"}</small></span><span><input class="inp" style="width:96px;text-align:right" type="text" inputmode="decimal" data-bprice="${p.id}" value="${b.prices[p.id]>0?dec(b.prices[p.id]):""}" placeholder="${bp?bp.price:""}"></span></div>`}).join("")}</div>
+   <div class="box"><h3>Прайс покупателя, ₽ за шт</h3><p class="hint">Пустое поле — цена = ваш прайс минус скидка покупателя, но не ниже минимума. Свою цену вписывайте, только если договорились отдельно.</p>
+    ${prods.map(p=>{const bp=buyerPrice({...b,prices:{}},p),o=optCalc(p),hasO=o.c>0&&p.h>0;return `<div class="ln" style="align-items:center"><span>${esc(p.name)}<br><small>${bp?(bp.floor?`<span class="neg">${rub(bp.price)} — упёрлось в минимум</span>`:"по скидке: "+rub(bp.price)):"нет цены"}${hasO?` · коридор ${rub(o.min)}–${rub(o.max)}`:""}</small></span><span><input class="inp" style="width:96px;text-align:right" type="text" inputmode="decimal" data-bprice="${p.id}" value="${b.prices[p.id]>0?dec(b.prices[p.id]):""}" placeholder="${bp?bp.price:""}"></span></div>`}).join("")}</div>
    ${hist}
    <div class="row2" id="bu_tail"><button type="button" class="btn main" id="bu_ok">${isNew?"Добавить":"Сохранить"}</button><button type="button" class="btn" id="bu_back">Назад</button>${isNew?"":`<button type="button" class="btn" id="bu_kp">КП</button><button type="button" class="btn danger" id="bu_del">Удалить</button>`}</div>`,s=>{
     const bkp=s.querySelector("#bu_kp");if(bkp)bkp.onclick=()=>openKP(Object.keys(b.prices).filter(id=>find("products",id)),b.id);
@@ -2203,7 +2239,7 @@ function openKP(ids,bid){
    <div class="row2"><button type="button" class="btn main" id="kp_pdf">КП (PDF / печать)</button><button type="button" class="btn" id="kp_xls">Excel для карточек WB</button></div>
    <div class="row2"><button type="button" class="btn small ghost" id="kp_ph">Скачать фото</button><button type="button" class="btn small ghost" id="kp_x">Закрыть</button></div>`,s=>{
     const draw=()=>{const bidv=s.querySelector("#kp_b").value,its=kpItems(items.map(p=>p.id),bidv);
-      s.querySelector("#kp_list").innerHTML=its.map(it=>`<div class="fbsrow" style="grid-template-columns:auto 1fr 84px 64px"><input type="checkbox" data-kp="${it.p.id}" ${sel.has(it.p.id)?"checked":""}><span>${esc(it.p.name)}<small>${it.o.rec?"рекоменд. "+rub(it.o.rec)+" · ":""}мин. ${rub(it.o.floor)}${it.price&&it.price<it.o.floor?` · <span class="neg">ниже вашего минимума</span>`:""}${it.G&&it.partner!=null&&it.partner/it.G<S.p.partnerMargin?` · <span class="neg">партнёру остаётся ${pct(Math.max(0,it.partner)/it.G,0)}</span>`:""}</small></span><input class="inp" data-kpp="${it.p.id}" inputmode="decimal" value="${it.price?dec(it.price):""}" aria-label="Цена"><input class="inp" data-kpm="${it.p.id}" inputmode="numeric" value="${it.moq}" aria-label="Мин. партия"></div>`).join("");
+      s.querySelector("#kp_list").innerHTML=its.map(it=>`<div class="fbsrow" style="grid-template-columns:auto 1fr 84px 64px"><input type="checkbox" data-kp="${it.p.id}" ${sel.has(it.p.id)?"checked":""}><span>${esc(it.p.name)}<small>коридор ${rub(it.o.min)}–${rub(it.o.max)}${it.price&&it.price<it.o.floor?` · <span class="neg">ниже вашего минимума</span>`:""}${it.G&&it.partner!=null&&it.partner/it.G<S.p.partnerMargin?` · <span class="neg">партнёру остаётся ${pct(Math.max(0,it.partner)/it.G,0)}</span>`:""}</small></span><input class="inp" data-kpp="${it.p.id}" inputmode="decimal" value="${it.price?dec(it.price):""}" aria-label="Цена"><input class="inp" data-kpm="${it.p.id}" inputmode="numeric" value="${it.moq}" aria-label="Мин. партия"></div>`).join("");
       s.querySelectorAll("[data-kp]").forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.kp):sel.delete(c.dataset.kp)})};
     draw();s.querySelector("#kp_b").onchange=draw;
     const collect=()=>{const pr={},mq={};s.querySelectorAll("[data-kpp]").forEach(i=>{const v=num(i.value);if(v>0)pr[i.dataset.kpp]=v});s.querySelectorAll("[data-kpm]").forEach(i=>{const v=num(i.value);if(v>0)mq[i.dataset.kpm]=Math.floor(v)});
@@ -2301,7 +2337,7 @@ function planUpdate(){
 /* ================= ещё: параметры и копии ================= */
 const PDEF=[["Себестоимость",[["ppk","Пластик по умолчанию","₽/кг, для нового пластика и без привязки",1],["elec","Электричество","₽ за час печати",1],["labor","Работа","₽ за час печати",1],["wear","Износ принтера","₽ за час печати",1],["defect","Брак","% от пластика, э/э, износа",100],["delivery","Доставка до WB/ПВЗ","₽ на шт",1]]],
  ["Wildberries",[["tax","Налог самозанятого","% от цены после скидки",100],["acq","Эквайринг","%",100],["buy","Выкуп по умолчанию","%",100],["lb","Логистика база","₽",1],["disc","Скидка для новых изделий","%",100],["comm","Комиссия для новых","%",100],["ads","Реклама для новых","%",100],["spp","СПП","% (для справки)",100]]],
- ["Принтер и опт",[["printers","Принтеров","шт, для загрузки",1],["printHours","Часов печати в день","на 1 принтер, для плана",1],["stockDays","Запас, дней","сколько дней продаж держать на складе",1],["load","Загрузка принтера","% времени",100],["optTax","Налог при опте ИП/юрлицу","%",100],["optPerH","Мин. ₽/час на опте","ниже — опт невыгоден вам",1],["partnerMargin","Маржа партнёра","% от его цены продажи, рынок ждёт 25–30%",100],["partnerExtra","Прочие расходы партнёра","% цены: хранение, упаковка, возвраты",100],["partnerTax","Налог партнёра","%",100]]]];
+ ["Принтер и опт",[["printers","Принтеров","шт, для загрузки",1],["printHours","Часов печати в день","на 1 принтер, для плана",1],["stockDays","Запас, дней","сколько дней продаж держать на складе",1],["load","Загрузка принтера","% времени",100],["optTax","Налог при опте ИП/юрлицу","%",100],["optMinM","Мин. наценка опта","% к себестоимости — нижняя граница",100],["optMaxM","Макс. наценка опта","% к себестоимости — верхняя граница",100],["partnerMargin","Маржа партнёра","% от его цены продажи, рынок ждёт 25–30%",100],["partnerExtra","Прочие расходы партнёра","% цены: хранение, упаковка, возвраты",100],["partnerTax","Налог партнёра","%",100]]]];
 function moreHtml(){
   const last=(()=>{try{return localStorage.getItem("master3d_lastbackup")}catch(e){return null}})();
   const wc=wbLoadCache(),cfg=S.wbcfg;
