@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>WB Аналитика</title>
+<meta name="theme-color" content="#0b0b10">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{--bg:#0b0b10;--surface:#15141c;--sunk:#0f0e14;--fg:#f3f2f7;--muted:#8e8a9c;--line:#262433;--accent:#c86bff;--accent-fg:#1b0626;--accent-soft:#2c1b3a;
+  --ok:#5fd08a;--ok-soft:#173222;--warn:#f0b450;--warn-soft:#3a2c12;--bad:#ff6b6b;--bad-soft:#3d1b1b;--c1:#c86bff;--c2:#6c7a92;--c3:#f0a050;--c4:#58b4ff;--c5:#ffd75e;--c6:#ff6b8a;
+  --f-d:"Unbounded","Manrope",system-ui,sans-serif;--f-b:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-n:"JetBrains Mono",ui-monospace,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:radial-gradient(120% 55% at 50% -10%,#2a1640,transparent 60%) fixed,var(--bg);color:var(--fg);font:15px/1.45 var(--f-b);-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+[hidden]{display:none!important}
+.wrap{max-width:920px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left))}
+.top{position:sticky;top:0;z-index:5;background:rgba(11,11,16,.8);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px}
+.brand{font:700 clamp(16px,4.6vw,19px)/1.1 var(--f-d);white-space:nowrap}.brand span{color:var(--accent)}
+.per{border:1px solid rgba(255,255,255,.1);background:#1b1a24;border-radius:99px;padding:7px 12px;font-weight:700;font-size:13px;white-space:nowrap}
+main{padding-block:6px calc(110px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid rgba(255,255,255,.06);border-radius:22px;background:linear-gradient(180deg,#1a1922,#121118);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{margin:0;font:700 14px/1.25 var(--f-d);display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.card h2 small{font:500 12px var(--f-b);color:var(--muted)}
+.hero{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 22%,#17141f),#110f16 70%)}
+.big{font:700 34px/1.05 var(--f-n);font-variant-numeric:tabular-nums}.big.neg{color:var(--bad)}
+.sub{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.sub b{font-family:var(--f-n);color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:rgba(255,255,255,.035);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0;border:0;text-align:left;color:inherit}
+.kpi span{font-size:11.5px;color:var(--muted);font-weight:700}
+.kpi b{font:700 19px/1.2 var(--f-n);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi small{font-size:11.5px;color:var(--muted)}
+.kpi.warn b{color:var(--warn)}.kpi.bad b{color:var(--bad)}.kpi.ok b{color:var(--ok)}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+.banner{border-radius:16px;padding:10px 12px;background:var(--warn-soft);font-size:13px}.banner.bad{background:var(--bad-soft)}.banner.ok{background:var(--accent-soft)}
+.lines{display:flex;flex-direction:column;gap:5px;font-size:13.5px}
+.ln{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.ln>span:last-child{font-family:var(--f-n);white-space:nowrap}
+.ln.total{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--sunk)}.stack i{display:block;height:100%}.stack i+i{border-left:2px solid #15141c}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid rgba(255,255,255,.08);background:#16151d;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600}
+.chip.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.search{width:100%;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0e0d13}
+.list{display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06);border-radius:22px;background:linear-gradient(180deg,#1a1922,#121118);overflow:hidden}
+.row{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:0;border-bottom:1px solid rgba(255,255,255,.05);background:none;text-align:left;width:100%;color:inherit}
+.row:last-child{border-bottom:0}.row:active{background:rgba(255,255,255,.03)}
+.ph{width:44px;height:56px;border-radius:10px;background:#0e0d13 center/cover no-repeat;display:grid;place-items:center;color:var(--muted);font-size:11px}
+.info{min-width:0;display:flex;flex-direction:column;gap:2px}.info b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.num{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px}.num b{font:700 15px var(--f-n);white-space:nowrap}.num small{font:600 12px var(--f-n);white-space:nowrap}
+.pos{color:var(--ok)}.neg{color:var(--bad)}.mid{color:var(--warn)}
+.t{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.t th{color:var(--muted);font-weight:600;text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
+.t td{text-align:right;padding:6px;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--f-n);white-space:nowrap}
+.t th:first-child,.t td:first-child{text-align:left;font-family:var(--f-b);white-space:normal}
+.scroll{overflow-x:auto}
+.inp{width:100%;padding:11px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0e0d13;min-width:0}
+.field{display:flex;flex-direction:column;gap:5px}.field>span{font-size:12.5px;font-weight:600;color:var(--muted)}.field small{font-size:11.5px;color:var(--muted)}
+.btn{border:1px solid rgba(255,255,255,.08);background:#1d1c26;border-radius:99px;padding:12px 14px;font-weight:700;text-align:center}
+.btn.main{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);box-shadow:0 8px 26px -8px var(--accent)}
+.btn.small{padding:8px 12px;font-size:13px}
+.row2{display:flex;gap:8px;flex-wrap:wrap}.row2>*{flex:1 1 140px}
+.tabs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:7;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:rgba(21,20,28,.85);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 16px 40px rgba(0,0,0,.6)}
+@media(min-width:1000px){.tabs{left:50%;right:auto;width:888px;transform:translateX(-50%)}}
+.tabs .in{display:grid;grid-template-columns:repeat(4,1fr);height:62px}
+.tabs button{background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);position:relative;z-index:0}
+.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{color:var(--accent)}.tabs button.on::before{content:"";position:absolute;top:6px;width:44px;height:32px;border-radius:12px;background:var(--accent-soft);z-index:-1}
+.back{position:fixed;inset:0;z-index:20;background:rgba(5,5,10,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#15141c;width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:28px 28px 0 0;border-top:1px solid rgba(255,255,255,.08);padding:18px max(18px,env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font:700 18px/1.25 var(--f-d)}
+.chart{width:100%;height:auto;display:block}.chart text{font:500 10px var(--f-b);fill:var(--muted)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:30;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;max-width:calc(100% - 32px)}
+.empty{padding:26px 18px;text-align:center;color:var(--muted)}.empty b{display:block;color:var(--fg);margin-bottom:6px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite;vertical-align:-2px}@keyframes sp{to{transform:rotate(1turn)}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><div class="brand">WB<span>.</span>Аналитика</div><button type="button" class="per" id="per">30 дней</button></div></header>
+<main class="wrap" id="main"></main>
+<nav class="tabs"><div class="in">
+  <button type="button" data-v="sum"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Сводка</button>
+  <button type="button" data-v="goods"><svg viewBox="0 0 24 24"><path d="M12 3 3 7.5v9L12 21l9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>Товары</button>
+  <button type="button" data-v="stock"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11H3z"/><path d="M8 20v-6h8v6"/></svg>Остатки</button>
+  <button type="button" data-v="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Ещё</button>
+</div></nav>
+<div class="back" id="back" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=v=>{const n=parseFloat(String(v==null?"":v).replace(/\s/g,"").replace(",","."));return isFinite(n)?n:NaN};
+const rub=(n,d=0)=>isFinite(n)?(+n).toLocaleString("ru-RU",{minimumFractionDigits:d,maximumFractionDigits:d})+" ₽":"—";
+const n1=(n,d=1)=>isFinite(n)?n.toLocaleString("ru-RU",{maximumFractionDigits:d}):"—";
+const pct=(f,d=1)=>isFinite(f)?(f*100).toLocaleString("ru-RU",{maximumFractionDigits:d})+"%":"—";
+const div=(a,b)=>b?a/b:NaN;
+const KEY="wbstat_v1",CK="wbstat_cache";
+const DEF={url:"",key:"",tax:0.07,base:"retail",per:"30",from:"",to:"",view:"sum",sort:"revenue"};
+let S=(()=>{try{return Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return {...DEF}}})();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let R=(()=>{try{return JSON.parse(localStorage.getItem(CK)||"null")}catch(e){return null}})(),loading=false,err="",q="";
+let tt;const toast=m=>{const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)};
+const iso=d=>{const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
+const ddmm=s=>s?s.slice(8,10)+"."+s.slice(5,7):"";
+function range(){
+  const t=new Date(),y=t.getFullYear(),m=t.getMonth(),D=n=>iso(new Date(Date.now()-n*864e5));
+  switch(S.per){case"7":return [D(6),iso(t),"7 дней"];case"30":return [D(29),iso(t),"30 дней"];case"90":return [D(89),iso(t),"90 дней"];
+    case"m":return [iso(new Date(y,m,1)),iso(t),new Date(y,m,1).toLocaleDateString("ru-RU",{month:"long"})];
+    case"pm":return [iso(new Date(y,m-1,1)),iso(new Date(y,m,0)),new Date(y,m-1,1).toLocaleDateString("ru-RU",{month:"long"})];
+    default:return [S.from||D(29),S.to||iso(t),ddmm(S.from)+"–"+ddmm(S.to)]}
+}
+async function gGet(p){
+  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(S.url))throw new Error("Сначала подключите таблицу: «Ещё» → «Подключение».");
+  const u=S.url+"?"+Object.entries(p).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
+  let r;try{r=await fetch(u,{redirect:"follow"})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
+  try{return await r.json()}catch(e){throw new Error("Google ответил не данными. Проверьте развертывание скрипта.")}
+}
+async function gPost(b){let r;try{r=await fetch(S.url,{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({key:S.key},b))})}catch(e){throw new Error("Нет связи с Google.")}return r.json()}
+const errText=e=>e==="wrong_key"?"Ключ доступа не подходит. Посмотрите его в таблице: меню «WB Аналитика» → «Показать ключ доступа».":e;
+async function load(){
+  if(!S.url||!S.key){render();return}
+  const [from,to]=range();loading=true;err="";render();
+  try{const d=await gGet({action:"report",key:S.key,from,to,tax:S.tax,base:S.base});if(!d.ok)throw new Error(errText(d.error));d.at=Date.now();R=d;try{localStorage.setItem(CK,JSON.stringify(d))}catch(e){}}
+  catch(e){err=e.message}
+  loading=false;render();
+}
+/* ---------- показатели ---------- */
+function m(o){
+  const buy=o.dlv>=1?div(o.dlv-o.back,o.dlv):div(o.saleQ,o.ordQ-o.cancQ);
+  return {buy,drrO:div(o.adSum,o.ordSum),drrS:div(o.adSum,o.revenue),margin:div(o.profit,o.revenue),logPer:div(o.log,o.netQ),wb:o.revenue-o.pay,
+    otherAll:o.stor+o.acc+o.pen+o.other,stock:o.fbo+o.fbs,days:o.perDay>0?(o.fbo+o.fbs)/o.perDay:NaN,roi:div(o.profit,o.costSum)};
+}
+function kpi(t,v,s,cls,act){return `<${act?"button type=button data-go="+act:"div"} class="kpi ${cls||""}"><span>${t}</span><b>${v}</b>${s?`<small>${s}</small>`:""}</${act?"button":"div"}>`}
+function status(){
+  if(!R||!R.status)return "";const st=R.status,er=[st.errStat&&"Заказы: "+st.errStat,st.errFin&&"Отчёты: "+st.errFin,st.errAds&&"Реклама: "+st.errAds,st.errStock&&"Остатки: "+st.errStock].filter(Boolean);
+  const est=R.estDays&&R.estDays.length?`<div class="banner">За ${R.estDays.length} дн. (с ${ddmm(R.estDays[0])}) отчёта WB ещё нет: выручка и «к перечислению» взяты из оперативной статистики, логистика и хранение появятся с отчётом. Итог за эти дни предварительный.</div>`:"";
+  return est+(er.length?`<div class="banner bad">${er.map(esc).join("<br>")}</div>`:"");
+}
+function chart(days){
+  if(!days||!days.length)return "";const W=340,Hh=140,top=10,bot=20,mx=Math.max(1,...days.map(d=>Math.max(d.revenue,d.ordSum))),bw=(W-6)/days.length;
+  const y=v=>top+(Hh-top-bot)*(1-Math.max(0,v)/mx);
+  const bars=days.map((d,i)=>`<rect x="${3+i*bw+bw*.15}" y="${y(d.revenue)}" width="${bw*.7}" height="${Math.max(0,Hh-bot-y(d.revenue))}" rx="2" fill="var(--c1)"><title>${ddmm(d.d)}: выручка ${rub(d.revenue)}</title></rect>`).join("");
+  const line=(f,c)=>`<polyline fill="none" stroke="${c}" stroke-width="2" points="${days.map((d,i)=>`${3+i*bw+bw/2},${y(d[f])}`).join(" ")}"/>`;
+  const step=Math.ceil(days.length/7),lbl=days.map((d,i)=>i%step?"":`<text x="${3+i*bw+bw/2}" y="${Hh-5}" text-anchor="middle">${ddmm(d.d)}</text>`).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Выручка, заказы и реклама по дням">${bars}${line("ordSum","var(--c4)")}${line("ads","var(--c6)")}${lbl}</svg>
+   <div class="legend"><span><i style="background:var(--c1)"></i>Выручка</span><span><i style="background:var(--c4)"></i>Заказы, ₽</span><span><i style="background:var(--c6)"></i>Реклама</span></div>`;
+}
+function sumHtml(){
+  if(!S.url||!S.key)return `<div class="card"><div class="empty"><b>Подключите таблицу</b>Приложение берёт данные кабинета WB из вашей Google Таблицы со скриптом. Откройте «Ещё» → «Подключение».</div><button type="button" class="btn main" data-go="more">Подключить</button></div>`;
+  if(!R)return `<div class="card"><div class="empty">${loading?`<span class="spin"></span> Загружаю…`:err?`<b>Не получилось</b>${esc(err)}`:"Нет данных"}</div></div>`;
+  const t=R.total,x=m(t),P=S.tax;
+  const seg=[["Комиссия и эквайринг WB",x.wb,"--c2"],["Логистика",t.log,"--c3"],["Хранение, приёмка, штрафы",x.otherAll,"--c4"],["Реклама",t.adSum,"--c6"],["Налог",t.tax,"--c5"],["Закуп",t.costSum,"#7d6f9a"],["Прибыль",Math.max(0,t.profit),"--ok"]].filter(s=>s[1]>0);
+  const tot=seg.reduce((a,s)=>a+s[1],0)||1,col=c=>c.startsWith("--")?`var(${c})`:c;
+  return `${err?`<div class="banner bad">${esc(err)}</div>`:""}${status()}
+  <div class="card hero"><h2>Прибыль <small>${esc(range()[2])} · ${ddmm(R.from)}–${ddmm(R.to)}</small></h2>
+   <div class="big ${t.profit<0?"neg":""}">${rub(t.profit)}</div>
+   <div class="sub"><span>маржа <b>${pct(x.margin,1)}</b></span><span>выручка <b>${rub(t.revenue)}</b></span>${t.costSum?`<span>ROI <b>${pct(x.roi,0)}</b></span>`:""}</div>
+   ${t.noCost?`<div class="banner">У ${t.noCost} артикулов не указан закуп — прибыль завышена. <button type="button" class="btn small" data-go="cost" style="margin-left:6px">Внести закуп</button></div>`:""}</div>
+  <div class="grid">
+   ${kpi("Заказы",`${n1(t.ordQ,0)} шт`,`${rub(t.ordSum)} · отмен ${n1(t.cancQ,0)}`)}
+   ${kpi("Продажи (выкупы)",`${n1(t.netQ,0)} шт`,`выручка ${rub(t.revenue)}`)}
+   ${kpi("Процент выкупа",pct(x.buy,1),t.dlv?`${n1(t.dlv-t.back,0)} из ${n1(t.dlv,0)} доставок`:"по заказам и продажам",x.buy<0.6?"bad":x.buy<0.8?"warn":"ok")}
+   ${kpi("Возвраты",`${n1(t.retQ,0)} шт`,rub(t.retSum))}
+   ${kpi("Брак",`${n1(t.brakQ,0)} шт`,t.brakSum?`компенсация ${rub(t.brakSum)}`:"по отчётам WB",t.brakQ?"warn":"")}
+   ${kpi("Логистика",rub(t.log),`${rub(x.logPer)} на продажу · ${pct(div(t.log,t.revenue),1)}`)}
+   ${kpi("ДРР",pct(x.drrO,1),`от заказов · от продаж ${pct(x.drrS,1)} · ${rub(t.adSum)}`,x.drrO>0.15?"bad":x.drrO>0.08?"warn":"")}
+   ${kpi("Налог УСН "+pct(P,0),rub(t.tax),S.base==="pay"?"от «к перечислению»":"от реализации")}
+   ${kpi("Хранение и прочее",rub(x.otherAll),`хранение ${rub(t.stor)} · штрафы ${rub(t.pen)}`)}
+   ${kpi("К перечислению",rub(t.pay),`WB удержал ${rub(x.wb)}`)}
+   ${kpi("Закуп",rub(t.costSum),`${n1(t.netQ,0)} шт × себестоимость`,t.noCost?"warn":"")}
+   ${kpi("Остатки",`${n1(t.fbo+t.fbs,0)} шт`,`FBO ${n1(t.fbo,0)} · FBS ${n1(t.fbs,0)} · ${rub(t.stockCost)}`,"","stock")}
+  </div>
+  <div class="card"><h2>По дням</h2>${chart(R.days)}</div>
+  <div class="card"><h2>Куда уходит выручка <small>${rub(t.revenue)}</small></h2>
+   <div class="stack">${seg.map(s=>`<i style="width:${s[1]/tot*100}%;background:${col(s[2])}" title="${s[0]}"></i>`).join("")}</div>
+   <div class="lines">${seg.map(s=>`<div class="ln"><span><i class="dot" style="background:${col(s[2])}"></i>${s[0]}</span><span>${rub(s[1])} · ${pct(div(s[1],t.revenue),0)}</span></div>`).join("")}</div>
+   <p class="hint">Прибыль = к перечислению − логистика − хранение, приёмка, штрафы − реклама − налог ${pct(P,0)} − закуп.</p></div>
+  <p class="hint" style="text-align:center">${R.status&&R.status.statAt?"Данные из WB: "+new Date(R.status.statAt).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}${R.status&&R.status.finLast?" · отчёты по "+ddmm(R.status.finLast):""} · <button type="button" class="chip" data-act="reload">Обновить</button></p>`;
+}
+const SORTS=[["revenue","Выручка"],["profit","Прибыль"],["margin","Маржа"],["drr","ДРР"],["buy","Выкуп"],["stock","Остаток"]];
+function goodsHtml(){
+  if(!R)return sumHtml();
+  let L=R.items.filter(o=>o.nm&&(o.revenue||o.ordQ||o.adSum||o.fbo||o.fbs));
+  if(q)L=L.filter(o=>(o.title+" "+o.art+" "+o.nm).toLowerCase().includes(q));
+  const key={revenue:o=>o.revenue,profit:o=>o.profit,margin:o=>m(o).margin||-9,drr:o=>m(o).drrO||0,buy:o=>-(m(o).buy||2),stock:o=>o.fbo+o.fbs}[S.sort];
+  L.sort((a,b)=>key(b)-key(a));
+  const z=R.items.find(o=>!o.nm);
+  return `<input class="search" id="q" type="search" placeholder="Поиск: название, артикул" value="${esc(q)}">
+  <div class="chips">${SORTS.map(([k,l])=>`<button type="button" class="chip ${S.sort===k?"on":""}" data-sort="${k}">${l}</button>`).join("")}</div>
+  ${L.length?`<div class="list">${L.map(o=>{const x=m(o);return `<button type="button" class="row" data-nm="${o.nm}"><span class="ph" style="${o.photo?`background-image:url('${esc(o.photo)}')`:""}">${o.photo?"":"нет"}</span>
+   <span class="info"><b>${esc(o.title||("Арт. "+o.nm))}</b><small>${esc(o.art||"")} · ${o.nm}</small><small>${n1(o.netQ,0)} шт · выкуп ${pct(x.buy,0)} · ДРР ${pct(x.drrO,0)} · ост. ${n1(o.fbo+o.fbs,0)}${o.cost?"":" · <span class=mid>нет закупа</span>"}</small></span>
+   <span class="num"><b>${rub(o.revenue)}</b><small class="${o.profit<0?"neg":"pos"}">${rub(o.profit)}</small><small style="color:var(--muted)">${pct(x.margin,0)}</small></span></button>`}).join("")}</div>`:`<div class="card"><div class="empty">Ничего не найдено.</div></div>`}
+  ${z&&(z.stor||z.pen||z.other||z.log)?`<div class="card"><h2>Расходы без артикула <small>${rub(z.stor+z.pen+z.other+z.log+z.acc)}</small></h2><div class="lines"><div class="ln"><span>Хранение</span><span>${rub(z.stor)}</span></div><div class="ln"><span>Логистика</span><span>${rub(z.log)}</span></div><div class="ln"><span>Штрафы</span><span>${rub(z.pen)}</span></div><div class="ln"><span>Прочие удержания</span><span>${rub(z.other+z.acc)}</span></div></div><p class="hint">WB списывает их на весь кабинет. Они учтены в общей прибыли на «Сводке».</p></div>`:""}
+  <p class="hint">Цифра справа: выручка, ниже прибыль и маржа. Нажмите на товар — подробный разбор и закуп.</p>`;
+}
+function stockHtml(){
+  if(!R)return sumHtml();
+  const L=R.items.filter(o=>o.nm&&(o.fbo||o.fbs||o.perDay)).map(o=>({o,x:m(o)})).sort((a,b)=>(isFinite(a.x.days)?a.x.days:1e9)-(isFinite(b.x.days)?b.x.days:1e9));
+  const t=R.total;
+  return `<div class="grid">${kpi("Всего",`${n1(t.fbo+t.fbs,0)} шт`,`в закупе ${rub(t.stockCost)}`)}${kpi("Склады WB (FBO)",`${n1(t.fbo,0)} шт`,`в пути к клиенту ${n1(t.toCl,0)}`)}${kpi("Свой склад (FBS)",`${n1(t.fbs,0)} шт`,`возвращается ${n1(t.fromCl,0)}`)}${kpi("Закончится раньше всех",L[0]&&isFinite(L[0].x.days)?`${n1(L[0].x.days,0)} дн.`:"—",L[0]?esc(L[0].o.title||L[0].o.nm):"")}</div>
+  <div class="card"><h2>По товарам <small>хватит на — по продажам за 30 дней</small></h2><div class="scroll"><table class="t"><thead><tr><th>Товар</th><th>FBO</th><th>FBS</th><th>В день</th><th>Хватит</th></tr></thead><tbody>
+  ${L.map(({o,x})=>`<tr data-nm="${o.nm}"><td>${esc(o.title||o.nm)}<br><small class="hint">${esc(o.art||"")}${o.cost?" · "+rub(o.cost*(o.fbo+o.fbs)):""}</small></td><td>${n1(o.fbo,0)}</td><td>${n1(o.fbs,0)}</td><td>${n1(o.perDay,1)}</td><td class="${x.days<7?"neg":x.days<14?"mid":""}">${isFinite(x.days)?n1(x.days,0)+" дн.":"—"}</td></tr>`).join("")}</tbody></table></div>
+  <p class="hint">Красным — меньше недели, жёлтым — меньше двух. Остатки обновляются каждый час${R.status&&R.status.stockAt?", последний раз "+new Date(R.status.stockAt).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}.</p></div>`;
+}
+function moreHtml(){
+  return `<div class="card"><h2>Подключение</h2>
+   <label class="field"><span>Адрес веб-приложения Google</span><input id="s_url" class="inp" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.url)}"></label>
+   <label class="field"><span>Ключ доступа</span><input id="s_key" class="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx" value="${esc(S.key)}"><small>в таблице: меню «WB Аналитика» → «Показать ключ доступа»</small></label>
+   <div class="row2"><button type="button" class="btn main" data-act="connect">Проверить и сохранить</button></div></div>
+  <div class="card"><h2>Налог</h2>
+   <div class="row2"><label class="field"><span>Ставка УСН «доходы», %</span><input id="s_tax" class="inp" inputmode="decimal" value="${n1(S.tax*100,2)}"></label>
+   <label class="field"><span>С какой суммы</span><select id="s_base" class="inp"><option value="retail" ${S.base!=="pay"?"selected":""}>Реализация (цена продажи)</option><option value="pay" ${S.base==="pay"?"selected":""}>К перечислению от WB</option></select></label></div>
+   <p class="hint">Чаще налоговой базой считают всю сумму реализации («WB реализовал товар»), а не то, что WB перечислил. Уточните у своего бухгалтера.</p></div>
+  <div class="card"><h2>Закуп</h2><p class="hint">Себестоимость 1 шт по каждому артикулу — для расчёта прибыли. Можно внести и прямо в таблице, лист «Закуп».</p><button type="button" class="btn" data-go="cost">Внести закуп списком</button></div>
+  <div class="card"><h2>Как считаются показатели</h2><div class="lines" style="font-size:13px;color:var(--muted)">
+   <div>• <b>Выручка</b> — сумма реализации по отчётам WB (за дни без отчёта — по оперативной статистике).</div>
+   <div>• <b>Выкуп</b> — доставки, которые покупатель забрал ÷ все доставки.</div>
+   <div>• <b>ДРР</b> — расходы на рекламу ÷ сумма заказов (и ÷ выручка).</div>
+   <div>• <b>Брак</b> — строки отчёта WB с обоснованием «брак» (компенсации и возвраты брака).</div>
+   <div>• <b>Прибыль</b> — к перечислению − логистика − хранение, приёмка, штрафы, прочие удержания − реклама − налог − закуп.</div></div></div>`;
+}
+function render(){
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.view));
+  $("#per").textContent=range()[2];
+  const M=$("#main");M.innerHTML=(loading&&R?`<p class="hint" style="text-align:center"><span class="spin"></span> Обновляю…</p>`:"")+(S.view==="goods"?goodsHtml():S.view==="stock"?stockHtml():S.view==="more"?moreHtml():sumHtml());
+  const qi=$("#q");if(qi)qi.oninput=()=>{q=qi.value.trim().toLowerCase();const p=qi.selectionStart;render();const n=$("#q");n.focus();n.setSelectionRange(p,p)};
+}
+function openSheet(h,mount){const s=$("#sheet");s.innerHTML=h;$("#back").hidden=false;s.scrollTop=0;if(mount)mount(s)}
+function closeSheet(){$("#back").hidden=true;$("#sheet").innerHTML=""}
+$("#back").addEventListener("click",e=>{if(e.target.id==="back")closeSheet()});
+function openPeriod(){
+  const P=[["7","7 дней"],["30","30 дней"],["90","90 дней"],["m","Этот месяц"],["pm","Прошлый месяц"]];
+  openSheet(`<h2>Период</h2><div class="chips">${P.map(([k,l])=>`<button type="button" class="chip ${S.per===k?"on":""}" data-p="${k}">${l}</button>`).join("")}</div>
+   <div class="row2"><label class="field"><span>С</span><input id="p_f" class="inp" type="date" value="${esc(S.from||range()[0])}"></label><label class="field"><span>По</span><input id="p_t" class="inp" type="date" value="${esc(S.to||range()[1])}"></label></div>
+   <button type="button" class="btn main" id="p_ok">Показать за эти даты</button><p class="hint">WB хранит заказы 90 дней. Таблица копит данные дальше — до 400 дней.</p>`,s=>{
+    s.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.per=b.dataset.p;save();closeSheet();load()});
+    s.querySelector("#p_ok").onclick=()=>{const f=s.querySelector("#p_f").value,t=s.querySelector("#p_t").value;if(!f||!t||f>t){toast("Проверьте даты");return}S.per="c";S.from=f;S.to=t;save();closeSheet();load()};
+  });
+}
+function openItem(nm){
+  const o=R.items.find(x=>x.nm===nm);if(!o)return;const x=m(o);
+  const L=(t,v,cls)=>`<div class="ln"><span>${t}</span><span class="${cls||""}">${v}</span></div>`;
+  openSheet(`<div style="display:flex;gap:12px;align-items:center">${o.photo?`<span class="ph" style="width:64px;height:84px;background-image:url('${esc(o.photo)}')"></span>`:""}<div><h2>${esc(o.title||("Арт. "+o.nm))}</h2><p class="hint">${esc(o.art)} · ${o.nm}${o.subj?" · "+esc(o.subj):""}</p></div></div>
+   <div class="grid">${kpi("Прибыль",rub(o.profit),`маржа ${pct(x.margin,1)}`,o.profit<0?"bad":"ok")}${kpi("Выручка",rub(o.revenue),`${n1(o.netQ,0)} шт`)}${kpi("Выкуп",pct(x.buy,0),o.dlv?`${n1(o.dlv-o.back,0)} из ${n1(o.dlv,0)}`:"")}${kpi("ДРР",pct(x.drrO,1),`от продаж ${pct(x.drrS,1)}`)}</div>
+   <label class="field"><span>Закуп за 1 шт, ₽</span><div class="row2"><input id="i_cost" class="inp" inputmode="decimal" value="${o.cost||""}" placeholder="например 120"><button type="button" class="btn main" id="i_save" style="flex:0 0 auto">Сохранить</button></div></label>
+   <div class="lines">${L("Заказы",`${n1(o.ordQ,0)} шт · ${rub(o.ordSum)}`)}${L("Отмены",`${n1(o.cancQ,0)} шт`)}${L("Продажи",`${n1(o.saleQ,0)} шт · ${rub(o.saleSum)}`)}${L("Возвраты",`${n1(o.retQ,0)} шт · ${rub(o.retSum)}`)}${L("Брак",`${n1(o.brakQ,0)} шт${o.brakSum?" · компенсация "+rub(o.brakSum):""}`)}
+   ${L("<b>Выручка (реализация)</b>",rub(o.revenue))}${L("Комиссия и эквайринг WB","−"+rub(x.wb))}${L("К перечислению",rub(o.pay))}${L("Логистика",`−${rub(o.log)} · ${rub(x.logPer)}/шт`)}${L("Хранение, приёмка, штрафы, удержания","−"+rub(x.otherAll))}
+   ${L("Реклама",`−${rub(o.adSum)} · ${n1(o.adClicks,0)} кликов, ${n1(o.adOrders,0)} заказов`)}${L("Налог "+pct(S.tax,0),"−"+rub(o.tax))}${L("Закуп",o.cost?`−${rub(o.costSum)} (${n1(o.netQ,0)} × ${rub(o.cost)})`:"не указан","")}
+   <div class="ln total"><span>Прибыль</span><span class="${o.profit<0?"neg":"pos"}">${rub(o.profit)}</span></div>${o.netQ>0?L("Прибыль на 1 шт",rub(o.profit/o.netQ)):""}</div>
+   <div class="lines">${L("Остаток FBO / FBS",`${n1(o.fbo,0)} / ${n1(o.fbs,0)} шт`)}${L("Продаётся в день",n1(o.perDay,1))}${L("Хватит на",isFinite(x.days)?n1(x.days,0)+" дн.":"—")}</div>
+   ${o.estRev?`<p class="hint">Из выручки ${rub(o.estRev)} — предварительно, по оперативной статистике: отчёта WB за последние дни ещё нет.</p>`:""}
+   <button type="button" class="btn" id="i_x">Закрыть</button>`,s=>{
+    s.querySelector("#i_x").onclick=closeSheet;
+    s.querySelector("#i_save").onclick=async()=>{const v=num(s.querySelector("#i_cost").value);try{const d=await gPost({action:"cost",costs:{[nm]:v>0?v:0}});if(!d.ok)throw new Error(errText(d.error));toast("Закуп сохранён");closeSheet();load()}catch(e){toast(e.message)}};
+  });
+}
+function openCosts(){
+  if(!R){toast("Сначала загрузите данные");return}
+  const L=R.items.filter(o=>o.nm).sort((a,b)=>(a.cost?1:0)-(b.cost?1:0)||b.revenue-a.revenue);
+  openSheet(`<h2>Закуп за 1 шт</h2><p class="hint">Себестоимость с доставкой до вас, упаковкой и маркировкой. Пустые — сверху.</p>
+   <div class="list">${L.map(o=>`<div class="row" style="grid-template-columns:1fr 110px"><span class="info"><b>${esc(o.title||o.nm)}</b><small>${esc(o.art)} · ${o.nm}</small></span><input class="inp" inputmode="decimal" data-c="${o.nm}" value="${o.cost||""}" placeholder="₽"></div>`).join("")}</div>
+   <div class="row2"><button type="button" class="btn main" id="c_ok">Сохранить</button><button type="button" class="btn" id="c_x">Отмена</button></div>`,s=>{
+    s.querySelector("#c_x").onclick=closeSheet;
+    s.querySelector("#c_ok").onclick=async()=>{const c={};s.querySelectorAll("[data-c]").forEach(i=>{const v=num(i.value),old=(R.items.find(o=>o.nm===+i.dataset.c)||{}).cost||0;if((v>0?v:0)!==old)c[i.dataset.c]=v>0?v:0});
+      if(!Object.keys(c).length){closeSheet();return}try{const d=await gPost({action:"cost",costs:c});if(!d.ok)throw new Error(errText(d.error));toast("Сохранено: "+Object.keys(c).length);closeSheet();load()}catch(e){toast(e.message)}};
+  });
+}
+document.addEventListener("click",e=>{
+  const tb=e.target.closest(".tabs button");if(tb){S.view=tb.dataset.v;save();render();window.scrollTo(0,0);return}
+  if(e.target.closest("#per")){openPeriod();return}
+  const so=e.target.closest("[data-sort]");if(so){S.sort=so.dataset.sort;save();render();return}
+  const nm=e.target.closest("[data-nm]");if(nm&&R){openItem(+nm.dataset.nm);return}
+  const go=e.target.closest("[data-go]");if(go){const g=go.dataset.go;if(g==="cost"){openCosts();return}S.view=g;save();render();return}
+  const a=e.target.closest("[data-act]");if(!a)return;
+  if(a.dataset.act==="reload")load();
+  if(a.dataset.act==="connect"){(async()=>{S.url=$("#s_url").value.trim();S.key=$("#s_key").value.trim();save();a.disabled=true;a.textContent="Проверяю…";
+    try{const p=await gGet({action:"ping"});if(!p||p.app!=="wbstat")throw new Error("По этому адресу не скрипт «WB Аналитика». Проверьте адрес.");const d=await gGet({action:"report",key:S.key,from:range()[0],to:range()[1],tax:S.tax,base:S.base});if(!d.ok)throw new Error(errText(d.error));d.at=Date.now();R=d;try{localStorage.setItem(CK,JSON.stringify(d))}catch(x){}toast("Подключено");S.view="sum";save();render()}
+    catch(x){toast(x.message);a.disabled=false;a.textContent="Проверить и сохранить"}})()}
+});
+document.addEventListener("change",e=>{
+  if(e.target.id==="s_tax"){const v=num(e.target.value);if(v>=0&&v<=30){S.tax=v/100;save();toast("Налог "+n1(v,2)+"%");load()}else toast("Введите число от 0 до 30")}
+  if(e.target.id==="s_base"){S.base=e.target.value;save();load()}
+});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&R&&Date.now()-(R.at||0)>10*60000)load()});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+window.__w={S:()=>S,R:()=>R,m,load};
+render();load();
+})();
+</script>
+</body>
+</html>
