@@ -647,6 +647,7 @@ function banners(){
   if(!storageOk)h+=`<div class="banner bad"><p><b>Память недоступна.</b> Данные не сохранятся после закрытия. Откройте приложение в обычном окне Chrome.</p></div>`;
   if(syncConflict)h+=`<div class="banner bad"><p><b>В Google есть данные новее.</b> Их сохранили с другого устройства ${syncConflict.at?esc(new Date(syncConflict.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}. Выберите, какие данные оставить. Второй вариант при этом заменится.</p><div class="row2"><button type="button" class="btn main" data-act="syncPull">Загрузить из Google</button><button type="button" class="btn" data-act="syncForce">Оставить данные телефона</button></div></div>`;
   if(view==="products"){const dc=S.products.filter(p=>doubleCount(p).length).length;if(dc)h+=`<div class="banner"><p><b>У ${dc} изд. часть расходов, возможно, посчитана дважды</b> (в составе и вручную). Откройте изделие: в блоке «Себестоимость» будет подсказка.</p></div>`}
+  if(view==="products"&&ON_SERVER&&S.wbcfg.url&&S.wbcfg.url!==SRV_URL)h+=`<div class="banner"><p><b>Приложение открыто с вашего сервера</b>, а данные ещё идут через Google. Подключить его к серверу? Потом включите синхронизацию заново — появится новый ключ.</p><div class="row2"><button type="button" class="btn small main" data-act="toServer">Подключить к серверу</button></div></div>`;
   if(view==="products")h+=ordBannerHtml();
   if(view==="products"&&S.products.length){const g=k=>{try{return +localStorage.getItem(k)||0}catch(e){return 0}},last=g("master3d_lastbackup"),later=g("master3d_backlater"),D=864e5;
     if(Date.now()-last>14*D&&Date.now()-later>3*D)h+=`<div class="banner"><p><b>${last?`Копию в файл не делали ${Math.floor((Date.now()-last)/D)} дн.`:"Сделайте копию данных в файл"}</b> — она не зависит ни от Google, ни от интернета. Сохраните и отправьте себе в Telegram.</p><div class="row2"><button type="button" class="btn small main" data-act="exportJson">Сохранить копию</button><button type="button" class="btn small" data-act="backLater">Позже</button></div></div>`}
@@ -1172,7 +1173,7 @@ function wbWarehouse(c,name){c=c||wbLoadCache();if(!c||!c.warehouses||!c.warehou
 function wbT(w,vol,model){if(!w)return NaN;const fb=(model||S.wbcfg.model)==="fbw";const b1=fb?w.fbw1:w.fbs1,bl=fb?w.fbwL:w.fbsL;if(!(b1>0))return NaN;return b1+(bl>0?bl:0)*Math.max(0,(vol>0?vol:1)-1)}
 async function wbFetch(){
   const url=(S.wbcfg.url||"").trim();
-  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url))throw new Error("Вставьте адрес веб-приложения из Google (начинается с https://script.google.com/…/exec)");
+  if(!okUrl(url))throw new Error("Вставьте адрес веб-приложения (Google: https://script.google.com/…/exec, свой сервер: https://…/m/exec)");
   const ids=[...new Set(S.products.filter(p=>p.subj).map(p=>p.subj.id))].join(",");
   const q=`?model=${encodeURIComponent(S.wbcfg.model)}&wh=${encodeURIComponent(S.wbcfg.wh||"")}${ids?"&track="+ids:""}`;
   let res;
@@ -1298,7 +1299,9 @@ function cloudDot(){
   c.className="cloud "+(SY.err?"err":pend?"wait":"ok");
   c.querySelector("span").textContent=SY.err?"Google: нет связи":pend?"Сохраняю в Google…":SY.lastPush?"Google: сохранено "+new Date(SY.lastPush).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}):"Google";
 }
-function gUrl(){const u=(S.wbcfg.url||"").trim();if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u))throw new Error("Сначала вставьте адрес веб-приложения Google: «Ещё» → «Тарифы WB».");return u}
+const ON_SERVER=location.protocol!=="file:"&&!/github\.io$/.test(location.hostname),SRV_URL=location.origin+"/m/exec";
+function okUrl(u){return /^https:\/\/[^\/]+\/.+/.test(u)||/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(u)}
+function gUrl(){const u=(S.wbcfg.url||"").trim();if(!okUrl(u))throw new Error("Сначала вставьте адрес веб-приложения Google: «Ещё» → «Тарифы WB».");return u}
 async function gGet(params){
   const u=gUrl()+"?"+Object.entries(params).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
   let r;try{r=await fetch(u,{method:"GET",redirect:"follow"})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
@@ -2396,7 +2399,7 @@ function moreHtml(){
   const whs=wc&&wc.warehouses?wc.warehouses:[],curW=wbWarehouse(wc,cfg.wh);
   const wbCard=`<div class="card"><h2>Тарифы WB</h2>
    <p>Комиссии и логистику раз в неделю забирает ваш скрипт в Google Таблице. Он же пишет письмо, если что-то изменилось. Как настроить — в инструкции, шаги 1–4.</p>
-   <label class="field"><span>Адрес веб-приложения Google</span><input id="wb_url" class="inp" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(cfg.url)}"></label>
+   <label class="field"><span>${ON_SERVER?"Адрес вашего сервера":"Адрес веб-приложения Google"}</span><input id="wb_url" class="inp" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(cfg.url||(ON_SERVER?SRV_URL:""))}"></label>
    ${wc?`<p>Связь есть: ${n1(wc.subjects.length,0)} предметов, данные от ${esc(wc.updated?new Date(wc.updated).toLocaleString("ru-RU"):"—")}.</p>`:""}
    ${whs.length?`<div class="grid2"><label class="field"><span>Склад для логистики</span><select id="wb_wh" class="inp">${whs.map(w=>`<option value="${esc(w.name)}" ${curW&&w.name===curW.name?"selected":""}>${esc(w.name)} — ${n1(cfg.model==="fbw"?w.fbw1:w.fbs1,1)} ₽</option>`).join("")}</select><small>FBS: строка «Маркетплейс» вашего региона</small></label>
    <label class="field"><span>Схема продаж</span><select id="wb_model" class="inp">${Object.keys(MODEL_TXT).map(k=>`<option value="${k}" ${cfg.model===k?"selected":""}>${MODEL_TXT[k]}</option>`).join("")}</select><small>какую комиссию брать</small></label></div>`:""}
@@ -2479,6 +2482,7 @@ $("#main").addEventListener("click",e=>{
   const mt=e.target.closest("[data-mat]");if(mt){matTab=mt.dataset.mat;onlyLow=false;render();return}
   const a=e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
   if(act==="hideNotice"){delete S.notice;save();renderMain()}
+  if(act==="toServer"){S.wbcfg.url=SRV_URL;S.wbcfg.last="";SY.on=false;SY.key="";SY.base=0;SY.pushedRev=0;saveSync();save();view="more";render();toast("Подключено к серверу. Нажмите «Обновить тарифы», затем включите синхронизацию")}
   if(act==="backLater"){try{localStorage.setItem("master3d_backlater",String(Date.now()))}catch(e){}renderMain()}
   if(act==="syncOn")syncEnable(a);
   if(act==="syncRestore")openKeySheet(false);

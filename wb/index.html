@@ -104,7 +104,7 @@ const rub=(n,d=0)=>isFinite(n)?(+n).toLocaleString("ru-RU",{minimumFractionDigit
 const n1=(n,d=1)=>isFinite(n)?n.toLocaleString("ru-RU",{maximumFractionDigits:d}):"—";
 const pct=(f,d=1)=>isFinite(f)?(f*100).toLocaleString("ru-RU",{maximumFractionDigits:d})+"%":"—";
 const div=(a,b)=>b?a/b:NaN;
-const KEY="wbstat_v1",CK="wbstat_cache";
+const KEY="wbstat_v1",CK="wbstat_cache",ON_SERVER=location.protocol!=="file:"&&!/github\.io$/.test(location.hostname);
 const DEF={url:"",key:"",tax:0.07,base:"retail",per:"30",from:"",to:"",view:"sum",sort:"revenue"};
 let S=(()=>{try{return Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return {...DEF}}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
@@ -120,7 +120,7 @@ function range(){
     default:return [S.from||D(29),S.to||iso(t),ddmm(S.from)+"–"+ddmm(S.to)]}
 }
 async function gGet(p){
-  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(S.url))throw new Error("Сначала подключите таблицу: «Ещё» → «Подключение».");
+  if(!(/^https:\/\/[^\/]+\/.+/.test(S.url)||/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(S.url)))throw new Error("Сначала подключите таблицу: «Ещё» → «Подключение».");
   const u=S.url+"?"+Object.entries(p).map(([k,v])=>k+"="+encodeURIComponent(v)).join("&");
   let r;try{r=await fetch(u,{redirect:"follow"})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
   try{return await r.json()}catch(e){throw new Error("Google ответил не данными. Проверьте развертывание скрипта.")}
@@ -214,7 +214,7 @@ function stockHtml(){
 }
 function moreHtml(){
   return `<div class="card"><h2>Подключение</h2>
-   <label class="field"><span>Адрес веб-приложения Google</span><input id="s_url" class="inp" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.url)}"></label>
+   <label class="field"><span>${ON_SERVER?"Адрес вашего сервера":"Адрес веб-приложения Google"}</span><input id="s_url" class="inp" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(S.url||(ON_SERVER?location.origin+"/w/exec":""))}"></label>
    <label class="field"><span>Ключ доступа</span><input id="s_key" class="inp" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx" value="${esc(S.key)}"><small>в таблице: меню «WB Аналитика» → «Показать ключ доступа»</small></label>
    <div class="row2"><button type="button" class="btn main" data-act="connect">Проверить и сохранить</button></div></div>
   <div class="card"><h2>Налог</h2>
