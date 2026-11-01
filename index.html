@@ -648,6 +648,8 @@ function banners(){
   if(syncConflict)h+=`<div class="banner bad"><p><b>В Google есть данные новее.</b> Их сохранили с другого устройства ${syncConflict.at?esc(new Date(syncConflict.at).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}. Выберите, какие данные оставить. Второй вариант при этом заменится.</p><div class="row2"><button type="button" class="btn main" data-act="syncPull">Загрузить из Google</button><button type="button" class="btn" data-act="syncForce">Оставить данные телефона</button></div></div>`;
   if(view==="products"){const dc=S.products.filter(p=>doubleCount(p).length).length;if(dc)h+=`<div class="banner"><p><b>У ${dc} изд. часть расходов, возможно, посчитана дважды</b> (в составе и вручную). Откройте изделие: в блоке «Себестоимость» будет подсказка.</p></div>`}
   if(view==="products")h+=ordBannerHtml();
+  if(view==="products"&&S.products.length){const g=k=>{try{return +localStorage.getItem(k)||0}catch(e){return 0}},last=g("master3d_lastbackup"),later=g("master3d_backlater"),D=864e5;
+    if(Date.now()-last>14*D&&Date.now()-later>3*D)h+=`<div class="banner"><p><b>${last?`Копию в файл не делали ${Math.floor((Date.now()-last)/D)} дн.`:"Сделайте копию данных в файл"}</b> — она не зависит ни от Google, ни от интернета. Сохраните и отправьте себе в Telegram.</p><div class="row2"><button type="button" class="btn small main" data-act="exportJson">Сохранить копию</button><button type="button" class="btn small" data-act="backLater">Позже</button></div></div>`}
   if(view==="products"){const td=taxDue();if(td)h+=`<div class="banner"><p><b>Налог за ${mLabel(td.m).toLowerCase()} ≈ ${rub(td.tax)}</b>. Оплатить ${dueText(td.m)} в «Мой налог».</p><div class="row2"><button type="button" class="btn small main" data-act="goTax">Подробнее</button></div></div>`}
   if(S.notice){
     const n=S.notice;
@@ -2477,6 +2479,7 @@ $("#main").addEventListener("click",e=>{
   const mt=e.target.closest("[data-mat]");if(mt){matTab=mt.dataset.mat;onlyLow=false;render();return}
   const a=e.target.closest("[data-act]");if(!a)return;const act=a.dataset.act;
   if(act==="hideNotice"){delete S.notice;save();renderMain()}
+  if(act==="backLater"){try{localStorage.setItem("master3d_backlater",String(Date.now()))}catch(e){}renderMain()}
   if(act==="syncOn")syncEnable(a);
   if(act==="syncRestore")openKeySheet(false);
   if(act==="syncNow"){a.disabled=true;a.textContent="Сохраняю…";SY.localRev=Math.max(SY.localRev,Date.now());syncPush().then(ok=>{toast(ok?"Сохранено в Google":SY.err||"Не получилось");renderMain()})}
