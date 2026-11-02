@@ -1311,7 +1311,7 @@ async function gPost(body){
   let r;try{r=await fetch(gUrl(),{method:"POST",redirect:"follow",body:JSON.stringify(body)})}catch(e){throw new Error("Нет связи с Google. Проверьте интернет.")}
   try{return await r.json()}catch(e){throw new Error("Google ответил не данными. Проверьте развертывание скрипта.")}
 }
-function errText(e){return e==="wrong_key"?"Ключ не совпадает с ключом в таблице. Посмотрите его в таблице: меню «WB тарифы» → «Показать ключ синхронизации».":e==="no_key"?"В таблице синхронизация ещё не включена.":e}
+function errText(e){return e==="wrong_key"?"Ключ не совпадает. Посмотрите его на странице управления сервером (раздел «Мастерская 3D» → «Показать ключ синхронизации») или в таблице: меню «WB тарифы» → «Показать ключ синхронизации».":e==="no_key"?"В таблице синхронизация ещё не включена.":e}
 function syncTables(){
   const R=ranks(),f=v=>isFinite(v)?Math.round(v*100)/100:"";
   const stock=S.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(x=>{const r=calc(x),w=r.w;return [x.name,x.sku||"",f(x.qty),f(x.min),STATE_TXT[state(x)],f(r.c.total),w?f(x.wb.pb):"",w?f(w.G):"",w?f(w.Q):"",w?f(w.margin*100):"",w?f(w.perH):"",f(Math.max(0,x.qty)*r.c.total),prodLinks(x).map(l=>l.u).join(" ")]});
@@ -1366,7 +1366,7 @@ async function syncEnable(btn){
   try{
     const p=await gGet({action:"ping"});
     if(!p||!(p.v>=2))throw new Error("Скрипт в таблице старой версии. Обновите код скрипта (инструкция, раздел «Обновление скрипта»).");
-    if(p.sync){renderMain();openKeySheet(true);return}
+    if(p.serverKey||p.sync){renderMain();openKeySheet(!!p.sync,!!p.serverKey);return}
     SY.key=randKey();SY.on=true;SY.base=0;SY.localRev=Date.now();SY.pushedRev=0;saveSync();
     const ok=await syncPush({first:true});
     if(!ok){SY.on=false;saveSync();throw new Error(SY.err||"Не удалось сохранить")}
@@ -1374,16 +1374,17 @@ async function syncEnable(btn){
   }catch(e){openSheet(`<h2>Не получилось</h2><p class="sub" style="margin:0">${esc(e.message)}</p><div class="row2"><button type="button" class="btn" id="w_ok">Понятно</button></div>`,s=>s.querySelector("#w_ok").onclick=closeSheet)}
   topBar();renderMain();
 }
-function openKeySheet(exists){
-  openSheet(`<h2>${exists?"В Google уже есть данные":"Восстановить из Google"}</h2>
-   <p class="sub" style="margin:0">Введите ключ синхронизации. Его можно посмотреть в таблице: меню «WB тарифы» → «Показать ключ синхронизации».</p>
+function openKeySheet(exists,first){
+  const fresh=first&&!exists;
+  openSheet(`<h2>${fresh?"Включить синхронизацию":exists?"В Google уже есть данные":"Восстановить из Google"}</h2>
+   <p class="sub" style="margin:0">Введите ключ синхронизации. Он есть на странице управления сервером (раздел «Мастерская 3D» → «Показать ключ синхронизации») или в таблице: меню «WB тарифы» → «Показать ключ синхронизации».</p>
    <input id="k_in" class="inp" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx" autofocus>
-   <div class="row2"><button type="button" class="btn main" id="k_pull">Загрузить данные из Google</button>${exists?`<button type="button" class="btn" id="k_push">Заменить данными телефона</button>`:""}<button type="button" class="btn ghost" id="k_no">Отмена</button></div>
-   <p class="hint">Загрузка заменит данные на этом телефоне. «Заменить данными телефона» запишет в Google то, что сейчас в приложении.</p>`,s=>{
+   <div class="row2">${fresh?`<button type="button" class="btn main" id="k_push">Включить синхронизацию</button>`:`<button type="button" class="btn main" id="k_pull">Загрузить данные из Google</button>${exists?`<button type="button" class="btn" id="k_push">Заменить данными телефона</button>`:""}`}<button type="button" class="btn ghost" id="k_no">Отмена</button></div>
+   ${fresh?`<p class="hint">Данные с этого телефона будут сохраняться на сервер после каждого изменения.</p>`:`<p class="hint">Загрузка заменит данные на этом телефоне. «Заменить данными телефона» запишет в Google то, что сейчас в приложении.</p>`}`,s=>{
     const key=()=>s.querySelector("#k_in").value.trim();
     s.querySelector("#k_no").onclick=closeSheet;
-    s.querySelector("#k_pull").onclick=async()=>{if(!key()){toast("Введите ключ");return}try{await syncPull(key());closeSheet();view="products";render();toast("Данные загружены из Google")}catch(e){toast(e.message)}};
-    const kp=s.querySelector("#k_push");if(kp)kp.onclick=async()=>{if(!key()){toast("Введите ключ");return}SY.key=key();SY.on=true;SY.localRev=Date.now();saveSync();const ok=await syncPush({force:true});if(ok){closeSheet();toast("Данные телефона сохранены в Google")}else{SY.on=false;saveSync();toast(SY.err||"Не получилось")}topBar();renderMain()};
+    const kl=s.querySelector("#k_pull");if(kl)kl.onclick=async()=>{if(!key()){toast("Введите ключ");return}try{await syncPull(key());closeSheet();view="products";render();toast("Данные загружены из Google")}catch(e){toast(e.message)}};
+    const kp=s.querySelector("#k_push");if(kp)kp.onclick=async()=>{if(!key()){toast("Введите ключ");return}SY.key=key();SY.on=true;SY.localRev=Date.now();saveSync();const ok=await syncPush({force:true});if(ok){closeSheet();toast(fresh?"Синхронизация включена":"Данные телефона сохранены в Google")}else{SY.on=false;saveSync();toast(SY.err||"Не получилось")}topBar();renderMain()};
   });
 }
 function syncCardHtml(){
